@@ -7,6 +7,11 @@ const PUBLIC_ROUTES = ["/login", "/registro"];
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
 
+  // Supabase ainda não configurado (.env.local) - libera todas as rotas até a conexão ser feita
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return response;
+  }
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
