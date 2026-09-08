@@ -77,7 +77,16 @@ O mega prompt pede uma aba "Entradas" (receitas recebidas do cliente por obra) n
 ### Simplificação assumida (não bloqueante)
 - As tabelas de Agenda de Gastos / Entradas / Contratos usam `<Table>` com scroll horizontal em telas pequenas, em vez de virarem cards empilhados como o restante do sistema. Isso diverge da regra de UX do mega prompt ("nunca tabela pura em mobile"); left como está por ora para não expandir o escopo da fase — pode virar um ajuste de polimento futuro se desejado.
 
+## Fase 4 — Inventário (concluída)
+
+### Concluído
+- `lib/inventario.ts` — `calcStatusEstoque()` (Baixo quando restante < 20% do comprado) e `sugerirEstoqueMinimo()` (heurística local simples: 20% da quantidade comprada — a versão baseada em histórico real de consumo fica para a Fase 6/IA)
+- API routes: `/api/itens-inventario` (GET/POST — catálogo de itens), `/api/inventario` (GET/POST — entrada de estoque por obra, faz *upsert* respeitando a constraint única `obraId+itemId`, somando a quantidade se já existir), `/api/inventario/baixa` (POST — registra uso, valida que não ultrapassa o restante)
+- `/inventario`: KPIs (Total de Itens do catálogo / Valor Total do Inventário / Itens com Estoque Baixo), tabela completa (Nome, Qtd Comprada, Qtd Usada, Qtd Restante, Unidade, Local, Valor Unitário, Valor Total, Status), filtro por local (sincronizado com a URL) e seção "Locais de Armazenamento" no rodapé
+- `InventarioModal` — adiciona item ao estoque de uma obra; permite selecionar um item já cadastrado ou criar um novo inline (mesmo formulário, sem dialog aninhado) com sugestão automática de estoque mínimo conforme a quantidade digitada
+- `BaixaEstoqueModal` — registra baixa de um item específico (obra + item), com validação de quantidade máxima
+- Testado ponta a ponta via Playwright: criar obra → cadastrar item novo com 100 unidades → dar baixa de 90 → status muda para "Baixo" automaticamente, KPIs e resumo por local corretos
+
 ## Próximas fases (ainda não iniciadas)
-- Fase 4 — Inventário
 - Fase 5 — Pagamentos Semanais & Usuários
 - Fase 6 — Inteligência Artificial

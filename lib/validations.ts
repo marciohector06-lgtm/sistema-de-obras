@@ -74,3 +74,31 @@ export const contratoSchema = z.object({
 
 export type ContratoInput = z.input<typeof contratoSchema>;
 export type ContratoOutput = z.output<typeof contratoSchema>;
+
+export const itemInventarioSchema = z.object({
+  nome: z.string().min(2, "Informe o nome do item"),
+  unidade: z.string().min(1, "Informe a unidade (ex: sacos, m³, unidade)"),
+  valorUnitario: z.coerce.number().nonnegative("O valor unitário não pode ser negativo"),
+  estoqueMinimo: z.coerce.number().int().nonnegative().default(0),
+});
+
+export type ItemInventarioInput = z.input<typeof itemInventarioSchema>;
+export type ItemInventarioOutput = z.output<typeof itemInventarioSchema>;
+
+export const obraInventarioSchema = z.object({
+  obraId: z.string().min(1, "Selecione a obra"),
+  itemId: z.string().min(1, "Selecione o item"),
+  qtdComprada: z.coerce.number().int().positive("Informe uma quantidade maior que zero"),
+  local: z.string().optional().or(z.literal("")),
+});
+
+export type ObraInventarioInput = z.input<typeof obraInventarioSchema>;
+export type ObraInventarioOutput = z.output<typeof obraInventarioSchema>;
+
+export const baixaEstoqueSchema = z.object({
+  obraInventarioId: z.string().min(1, "Selecione o item em estoque"),
+  qtdUsada: z.coerce.number().int().positive("Informe uma quantidade maior que zero"),
+});
+
+export type BaixaEstoqueInput = z.input<typeof baixaEstoqueSchema>;
+export type BaixaEstoqueOutput = z.output<typeof baixaEstoqueSchema>;
