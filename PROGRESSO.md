@@ -87,6 +87,17 @@ O mega prompt pede uma aba "Entradas" (receitas recebidas do cliente por obra) n
 - `BaixaEstoqueModal` — registra baixa de um item específico (obra + item), com validação de quantidade máxima
 - Testado ponta a ponta via Playwright: criar obra → cadastrar item novo com 100 unidades → dar baixa de 90 → status muda para "Baixo" automaticamente, KPIs e resumo por local corretos
 
+## Fase 5 — Pagamentos Semanais & Usuários (concluída)
+
+### Concluído
+- `lib/pagamentos.ts` — rótulos/variantes de status, `getPagamentoStatusEfetivo()` (um pagamento Pendente/Em Processamento cujo vencimento já passou é exibido como "Atrasado" automaticamente, sem precisar de um job/cron para reescrever o status gravado) e helpers de semana (`getInicioSemana`, `formatIntervaloSemana`, domingo-a-sábado, mesmo padrão usado na Agenda de Gastos)
+- API routes: `/api/pagamentos` (GET com filtro por obra/status/semana, POST), `/api/pagamentos/[id]` (PATCH — muda status; ao marcar Efetuado grava `dataPagamento`), `/api/usuarios/[id]` (PATCH — altera `role` e/ou `status`)
+- `/pagamentos`: navegação de semana (anterior/próxima), 6 KPIs (Total da Semana / Pendente / Efetuado / Em Processamento / Atrasado / Cancelado), filtros por obra e status, tabela com ações inline por linha (marcar como pago, marcar em processamento, cancelar) e modal de novo pagamento
+- `/usuarios` (visível só para ADMIN no menu, mesma checagem de role já usada na Sidebar desde a Fase 1): tabela com nome/e-mail/perfil/status, select de perfil editável inline, botões de aprovar/desativar/reativar
+- Testado ponta a ponta via Playwright: pagamento criado → marcado como pago → some do menu de ações (já não faz sentido "marcar como pago" de novo); usuário aprovado e perfil alterado
+
+### Observação sobre dados de teste
+- Não existe (nem foi pedido) um fluxo de criação de usuário na UI — usuários chegam pela Fase 1 (registro + aprovação do admin), que depende do Supabase Auth estar conectado. Para testar `/usuarios` agora, os registros foram inseridos diretamente no banco local via um script Prisma descartável (não commitado). Quando o Supabase for conectado, isso passa a acontecer de verdade pelo fluxo de `/registro`.
+
 ## Próximas fases (ainda não iniciadas)
-- Fase 5 — Pagamentos Semanais & Usuários
 - Fase 6 — Inteligência Artificial

@@ -102,3 +102,23 @@ export const baixaEstoqueSchema = z.object({
 
 export type BaixaEstoqueInput = z.input<typeof baixaEstoqueSchema>;
 export type BaixaEstoqueOutput = z.output<typeof baixaEstoqueSchema>;
+
+export const pagamentoSchema = z.object({
+  obraId: z.string().min(1, "Selecione a obra"),
+  descricao: z.string().min(2, "Informe a descrição do pagamento"),
+  valor: z.coerce.number().positive("O valor deve ser maior que zero"),
+  dataVencimento: z.coerce.date(),
+  observacao: z.string().optional().or(z.literal("")),
+});
+
+export type PagamentoInput = z.input<typeof pagamentoSchema>;
+export type PagamentoOutput = z.output<typeof pagamentoSchema>;
+
+export const pagamentoStatusSchema = z.object({
+  status: z.enum(["PENDENTE", "EFETUADO", "EM_PROCESSAMENTO", "ATRASADO", "CANCELADO"]),
+});
+
+export const usuarioUpdateSchema = z.object({
+  role: z.enum(["ADMIN", "GESTOR", "ENGENHEIRO", "VIEWER"]).optional(),
+  status: z.enum(["PENDING", "ACTIVE", "INACTIVE"]).optional(),
+});
