@@ -32,8 +32,28 @@
 - **Prisma 7**: `datasource.url` não é mais aceito em `schema.prisma`. A URL de conexão agora fica em `prisma.config.ts`. `.env.local` tem uma `DATABASE_URL` placeholder local só para o `prisma generate` funcionar antes da conexão real com o Supabase.
 - `next@14.2.35` é o patch mais recente da série 14.x (a major pedida no mega prompt).
 
+## Fase 2 — Módulo Obras (concluída)
+
+### Concluído
+- Banco de dados local via Docker (Postgres 16, container `sistema-obras-db`) — usado para desenvolvimento real enquanto o Supabase não é conectado. Trocar `DATABASE_URL` no `.env.local` pela connection string do Supabase quando estiver pronto (nenhuma mudança de código necessária).
+- Migração inicial aplicada (`prisma/migrations/20260908202413_init`)
+- `lib/validations.ts` — schemas Zod (`obraSchema`, `gastoSchema`, `clienteSchema`), exportando tipos `Input` (pré-validação) e `Output` (pós-validação/coerção)
+- `lib/obra.ts` — `getObraSaude()` (calcula status verde/amarelo/laranja/vermelho combinando progresso e prazo) e `OBRA_STATUS_LABELS`
+- `lib/gastos.ts` — `agruparGastosPorSemana()` (usado pelo gráfico)
+- API routes: `/api/clientes`, `/api/obras` (GET/POST), `/api/obras/[id]` (GET/PATCH/DELETE), `/api/gastos` (POST — recalcula `obra.progresso` numa transação)
+- Componentes: `ObraCard`, `ObraForm` (react-hook-form + zod, usado em nova/editar), `ClienteSelect` (cadastro inline de cliente via modal), `GastoModal`, `GastosChart` (Recharts), `ObraStatusSelect` (edição inline), `ObrasFiltros`
+- Páginas: `/obras` (grid com filtros por status/cliente/busca), `/obras/nova`, `/obras/[id]` (dashboard da obra com KPIs, gráfico, gastos recentes), `/obras/[id]/editar`
+- Fluxo completo testado via Playwright: criar obra → ver detalhe → adicionar gasto → progresso recalculado → aparece na listagem. Testado também em viewport mobile (375-390px).
+
+### Notas técnicas importantes (adicionais à Fase 1)
+- **Prisma 7 exige driver adapter mesmo em setup padrão** (diferente do que a doc do Prisma sugeria): `lib/prisma.ts` usa `@prisma/adapter-pg` (`PrismaPg`) com `connectionString: process.env.DATABASE_URL`, não apenas `new PrismaClient()`.
+- **`@base-ui/react` Select não resolve automaticamente o rótulo do item selecionado** a partir dos `<SelectItem>` declarados via JSX (diferente do Radix). Sempre passar a prop `children` do `SelectValue` como função: `<SelectValue>{(value) => LABEL_MAP[value]}</SelectValue>` — do contrário o trigger mostra o valor bruto (ex: "EM_ANDAMENTO" em vez de "Em Andamento").
+- **`Button` do base-ui precisa de `nativeButton={false}`** quando composto com `render={<Link />}` (ou qualquer elemento que não seja `<button>`), senão gera warning de acessibilidade. Isso já foi resolvido de forma centralizada em `components/ui/button.tsx` (detecta `render` e desliga `nativeButton` automaticamente).
+- **`components/ui/input.tsx` e `components/ui/textarea.tsx` precisaram de `React.forwardRef`** (o gerado pelo CLI não encaminhava ref) — sem isso, `react-hook-form`'s `register()` não conseguia ler o valor dos campos no submit (bug real encontrado ao testar o formulário de nova obra: campos aparentavam preenchidos na tela mas o Zod recebia `undefined`).
+- **Zod `z.coerce.number()` / `z.coerce.date()` exigem o padrão de 3 genéricos do react-hook-form**: `useForm<InputType, unknown, OutputType>()` (usando `z.input<>`/`z.output<>` do schema), senão o TypeScript não fecha os tipos entre o que o formulário guarda (strings) e o que o `onSubmit` recebe (number/Date).
+- **Uma função utilitária pura não pode ser exportada de um arquivo `"use client"` e chamada num Server Component** — o Next.js substitui todos os exports desse módulo por referências de cliente ao atravessar a fronteira, e a chamada falha em runtime com "is not a function". `agruparGastosPorSemana` foi movida para `lib/gastos.ts` (sem `"use client"`); o componente `GastosChart.tsx` só re-exporta o tipo.
+
 ## Próximas fases (ainda não iniciadas)
-- Fase 2 — Módulo Obras (CRUD completo)
 - Fase 3 — Controle Financeiro
 - Fase 4 — Inventário
 - Fase 5 — Pagamentos Semanais & Usuários

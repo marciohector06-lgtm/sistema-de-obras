@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: sistema-obras-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: sistema_obras
+    ports:
+      - "5432:5432"
+    volumes:
+      - sistema-obras-db-data:/var/lib/postgresql/data
+
+volumes:
+  sistema-obras-db-data:

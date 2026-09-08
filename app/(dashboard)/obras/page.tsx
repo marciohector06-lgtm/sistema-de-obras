@@ -1,0 +1,73 @@
+import Link from "next/link";
+import { Plus, Building2 } from "lucide-react";
+import { prisma } from "@/lib/prisma";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { Button } from "@/components/ui/button";
+import { ObraCard } from "@/components/shared/ObraCard";
+import { ObrasFiltros } from "@/components/obras/ObrasFiltros";
+import type { ObraStatus } from "@/types";
+
+interface ObrasPageProps {
+  searchParams: Promise<{ status?: string; clienteId?: string; q?: string }>;
+}
+
+export default async function ObrasPage({ searchParams }: ObrasPageProps) {
+  const { status, clienteId, q } = await searchParams;
+
+  const [obras, clientes] = await Promise.all([
+    prisma.obra.findMany({
+      where: {
+        ...(status ? { status: status as ObraStatus } : {}),
+        ...(clienteId ? { clienteId } : {}),
+        ...(q ? { nome: { contains: q, mode: "insensitive" } } : {}),
+      },
+      include: { cliente: true, gastos: { select: { valor: true } } },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.cliente.findMany({ orderBy: { nome: "asc" } }),
+  ]);
+
+  return (
+    <div>
+      <PageHeader
+        title="Obras"
+        actions={
+          <Button render={<Link href="/obras/nova" />}>
+            <Plus /> Nova Obra
+          </Button>
+        }
+      />
+
+      <ObrasFiltros clientes={clientes} />
+
+      {obras.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border py-16 text-center">
+          <Building2 className="size-8 text-text-muted" />
+          <p className="text-sm font-medium text-text-primary">Nenhuma obra encontrada</p>
+          <p className="text-xs text-text-secondary">Cadastre a primeira obra para começar a acompanhar o progresso.</p>
+          <Button render={<Link href="/obras/nova" />} size="sm">
+            <Plus /> Nova Obra
+          </Button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {obras.map((obra) => (
+            <ObraCard
+              key={obra.id}
+              obra={{
+                id: obra.id,
+                nome: obra.nome,
+                clienteNome: obra.cliente?.nome,
+                valorContrato: Number(obra.valorContrato),
+                gastoTotal: obra.gastos.reduce((acc, g) => acc + Number(g.valor), 0),
+                progresso: Number(obra.progresso),
+                status: obra.status,
+                dataTermino: obra.dataTermino,
+              }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

@@ -29,7 +29,7 @@ export function KpiCard({ label, value, icon: Icon, variacao, valueClassName, cl
       <div className="flex items-end justify-between gap-2">
         <span
           className={cn(
-            "min-w-0 truncate text-2xl font-bold tracking-tight text-text-primary",
+            "min-w-0 truncate text-lg font-bold tracking-tight text-text-primary sm:text-2xl",
             valueClassName
           )}
         >

@@ -17,10 +17,10 @@ interface PageHeaderProps {
 // Cabeçalho de página com título, breadcrumb e ações (botões)
 export function PageHeader({ title, breadcrumbs, actions, className }: PageHeaderProps) {
   return (
-    <div className={cn("mb-6 flex items-center justify-between gap-4", className)}>
-      <div>
+    <div className={cn("mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between", className)}>
+      <div className="min-w-0">
         {breadcrumbs && breadcrumbs.length > 0 && (
-          <div className="mb-1 flex items-center gap-1 text-xs text-text-muted">
+          <div className="mb-1 flex flex-wrap items-center gap-1 text-xs text-text-muted">
             {breadcrumbs.map((crumb, i) => (
               <span key={i} className="flex items-center gap-1">
                 {i > 0 && <ChevronRight className="size-3" />}
@@ -35,9 +35,9 @@ export function PageHeader({ title, breadcrumbs, actions, className }: PageHeade
             ))}
           </div>
         )}
-        <h1 className="text-xl font-bold tracking-tight text-text-primary">{title}</h1>
+        <h1 className="truncate text-xl font-bold tracking-tight text-text-primary">{title}</h1>
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
   );
 }

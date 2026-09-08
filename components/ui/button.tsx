@@ -43,11 +43,14 @@ const buttonVariants = cva(
 const Button = React.forwardRef<
   React.ComponentRef<typeof ButtonPrimitive>,
   ButtonPrimitive.Props & VariantProps<typeof buttonVariants>
->(({ className, variant = "default", size = "default", ...props }, ref) => {
+>(({ className, variant = "default", size = "default", nativeButton, render, ...props }, ref) => {
   return (
     <ButtonPrimitive
       ref={ref}
       data-slot="button"
+      // Ao compor com um elemento não-<button> (ex: render={<Link />}), desliga a semântica de botão nativo
+      nativeButton={nativeButton ?? !render}
+      render={render}
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
     />
