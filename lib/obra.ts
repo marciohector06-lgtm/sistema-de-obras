@@ -1,5 +1,5 @@
 import { diasRestantes } from "@/lib/utils";
-import type { ObraStatus, SaudeObra } from "@/types";
+import type { GastoCategoria, ObraStatus, SaudeObra } from "@/types";
 
 export interface ObraSaude {
   saude: SaudeObra | "neutro";
@@ -34,4 +34,13 @@ export const OBRA_STATUS_LABELS: Record<ObraStatus, string> = {
   PAUSADA: "Pausada",
   CONCLUIDA: "Concluída",
   CANCELADA: "Cancelada",
+};
+
+export const GASTO_CATEGORIA_LABELS: Record<GastoCategoria, string> = {
+  MATERIAL: "Material",
+  MAO_DE_OBRA: "Mão de Obra",
+  EQUIPAMENTO: "Equipamento",
+  CONTRATO: "Contrato",
+  ADMINISTRATIVO: "Administrativo",
+  OUTRO: "Outro",
 };

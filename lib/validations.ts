@@ -53,3 +53,24 @@ export const gastoSchema = z.object({
 
 export type GastoInput = z.input<typeof gastoSchema>;
 export type GastoOutput = z.output<typeof gastoSchema>;
+
+export const entradaSchema = z.object({
+  obraId: z.string().min(1, "Selecione a obra"),
+  descricao: z.string().min(2, "Informe a descrição da entrada"),
+  valor: z.coerce.number().positive("O valor deve ser maior que zero"),
+  data: z.coerce.date(),
+  observacao: z.string().optional().or(z.literal("")),
+});
+
+export type EntradaInput = z.input<typeof entradaSchema>;
+export type EntradaOutput = z.output<typeof entradaSchema>;
+
+export const contratoSchema = z.object({
+  obraId: z.string().min(1, "Selecione a obra"),
+  titulo: z.string().min(2, "Informe o título do contrato"),
+  valor: z.coerce.number().positive().optional(),
+  dataAssin: z.coerce.date().optional(),
+});
+
+export type ContratoInput = z.input<typeof contratoSchema>;
+export type ContratoOutput = z.output<typeof contratoSchema>;

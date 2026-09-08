@@ -12,15 +12,7 @@ import { GastoModal } from "@/components/obras/GastoModal";
 import { GastosChart } from "@/components/obras/GastosChart";
 import { agruparGastosPorSemana } from "@/lib/gastos";
 import { formatBRL, formatDateBR } from "@/lib/utils";
-
-const CATEGORIA_LABELS: Record<string, string> = {
-  MATERIAL: "Material",
-  MAO_DE_OBRA: "Mão de Obra",
-  EQUIPAMENTO: "Equipamento",
-  CONTRATO: "Contrato",
-  ADMINISTRATIVO: "Administrativo",
-  OUTRO: "Outro",
-};
+import { GASTO_CATEGORIA_LABELS as CATEGORIA_LABELS } from "@/lib/obra";
 
 interface ObraDetailPageProps {
   params: Promise<{ id: string }>;

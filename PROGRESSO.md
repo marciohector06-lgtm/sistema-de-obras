@@ -1,11 +1,14 @@
 # Progresso — Sistema de Gestão de Obras
 
+## Repositório
+- Código publicado em https://github.com/marciohector06-lgtm/sistema-de-obras (branch `main`)
+
 ## Fase 1 — Fundação & Layout (em andamento)
 
 ### Concluído
 - Projeto Next.js 14 (App Router) + TypeScript (strict) + Tailwind CSS v4
 - shadcn/ui instalado via CLI (estilo `base-nova`, biblioteca `@base-ui/react`)
-  - Componentes adicionados: button, card, badge, input, label, dropdown-menu, dialog, table, avatar, separator, sheet, tooltip, select, skeleton, sonner
+  - Componentes adicionados: button, card, badge, input, label, dropdown-menu, dialog, table, avatar, separator, sheet, tooltip, select, skeleton, sonner, textarea, tabs
 - Design system aplicado em `app/globals.css` (paleta navy/primary/success/warning/danger/info do mega prompt, mapeada nos tokens do shadcn)
 - Fonte Inter configurada
 - Schema Prisma completo (`prisma/schema.prisma`) com todos os models do mega prompt
@@ -53,8 +56,28 @@
 - **Zod `z.coerce.number()` / `z.coerce.date()` exigem o padrão de 3 genéricos do react-hook-form**: `useForm<InputType, unknown, OutputType>()` (usando `z.input<>`/`z.output<>` do schema), senão o TypeScript não fecha os tipos entre o que o formulário guarda (strings) e o que o `onSubmit` recebe (number/Date).
 - **Uma função utilitária pura não pode ser exportada de um arquivo `"use client"` e chamada num Server Component** — o Next.js substitui todos os exports desse módulo por referências de cliente ao atravessar a fronteira, e a chamada falha em runtime com "is not a function". `agruparGastosPorSemana` foi movida para `lib/gastos.ts` (sem `"use client"`); o componente `GastosChart.tsx` só re-exporta o tipo.
 
+## Fase 3 — Controle Financeiro (concluída)
+
+### Decisão de schema (comunicada, não perguntada antes de agir)
+O mega prompt pede uma aba "Entradas" (receitas recebidas do cliente por obra) na Fase 3, mas o schema original só tinha `Pagamento` (reservado para a Fase 5 — pagamentos semanais a fornecedores/mão de obra, com status Pendente/Efetuado/etc). Para não misturar os dois conceitos, foi criado um novo model `Entrada` (espelhando `Gasto`: obraId, descricao, valor, data, comprovante, observacao). Migração `20260908205111_add_entrada`.
+
+### Concluído
+- `lib/financeiro.ts` — `calcResumoFinanceiro()`, `getPeriodoRange()` (mês/trimestre/ano/todos)
+- `lib/gastos.ts` — `agruparPorSemanaComItens()` (genérico, usado pela Agenda de Gastos)
+- `GASTO_CATEGORIA_LABELS` centralizado em `lib/obra.ts` (estava duplicado em 2 arquivos)
+- API routes: `/api/entradas` (GET/POST), `/api/contratos` (GET/POST)
+- `/financeiro` com 4 abas (shadcn Tabs): Resumo (KPIs + gráfico de barras orçamento/gasto por obra colorido pela saúde + donut por categoria), Agenda de Gastos (itemizado por semana), Entradas (tabela + modal de cadastro), Contratos (tabela + modal de cadastro — upload de PDF fica desabilitado até o Supabase Storage ser conectado, com aviso visual disso)
+- Filtro por obra e por período, sincronizado com a URL (`FinanceiroFiltros`)
+- Testado ponta a ponta via Playwright: criação de obras/gastos com categorias variadas, navegação entre as 4 abas, cadastro de entrada — tudo funcionando e persistindo corretamente
+
+### Bugs reais encontrados e corrigidos nesta fase
+- **`components/ui/tabs.tsx` (gerado pelo shadcn) tinha um bug de CSS**: usava a variante Tailwind `data-horizontal:`/`group-data-horizontal/tabs:` (que procura um atributo booleano `data-horizontal`), mas o base-ui na verdade define `data-orientation="horizontal"`. Como os nomes nunca batiam, os Tabs sempre renderizavam na orientação errada (lista de abas em coluna vertical ao invés de uma barra horizontal). Corrigido trocando para a sintaxe `data-[orientation=horizontal]:` / `group-data-[orientation=horizontal]/tabs:` em todo o arquivo. Também fazia falta repassar a prop `orientation` de fato para o `TabsPrimitive.Root` (só o atributo decorativo `data-orientation` estava sendo setado).
+- O gráfico de donut (Recharts `Pie`) parecia mostrar só uma fatia parcial em capturas de tela feitas com pouco tempo de espera — na verdade é só a animação de entrada (~1-2s); não é um bug.
+
+### Simplificação assumida (não bloqueante)
+- As tabelas de Agenda de Gastos / Entradas / Contratos usam `<Table>` com scroll horizontal em telas pequenas, em vez de virarem cards empilhados como o restante do sistema. Isso diverge da regra de UX do mega prompt ("nunca tabela pura em mobile"); left como está por ora para não expandir o escopo da fase — pode virar um ajuste de polimento futuro se desejado.
+
 ## Próximas fases (ainda não iniciadas)
-- Fase 3 — Controle Financeiro
 - Fase 4 — Inventário
 - Fase 5 — Pagamentos Semanais & Usuários
 - Fase 6 — Inteligência Artificial

@@ -71,6 +71,7 @@ model Obra {
   updatedAt       DateTime         @updatedAt
 
   gastos          Gasto[]
+  entradas        Entrada[]
   pagamentos      Pagamento[]
   inventarioItens ObraInventario[]
   alertas         Alerta[]
@@ -115,6 +116,19 @@ enum GastoCategoria {
   CONTRATO
   ADMINISTRATIVO
   OUTRO
+}
+
+// ===== ENTRADAS (receitas recebidas do cliente contra o contrato) =====
+model Entrada {
+  id          String   @id @default(cuid())
+  obraId      String
+  obra        Obra     @relation(fields: [obraId], references: [id])
+  descricao   String
+  valor       Decimal  @db.Decimal(12, 2)
+  data        DateTime
+  comprovante String?
+  observacao  String?
+  createdAt   DateTime @default(now())
 }
 
 // ===== INVENTARIO =====

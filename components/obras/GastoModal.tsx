@@ -25,15 +25,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { gastoSchema, type GastoInput, type GastoOutput } from "@/lib/validations";
-
-const CATEGORIA_LABELS = {
-  MATERIAL: "Material",
-  MAO_DE_OBRA: "Mão de Obra",
-  EQUIPAMENTO: "Equipamento",
-  CONTRATO: "Contrato",
-  ADMINISTRATIVO: "Administrativo",
-  OUTRO: "Outro",
-};
+import { GASTO_CATEGORIA_LABELS as CATEGORIA_LABELS } from "@/lib/obra";
 
 // Modal para lançar um novo gasto em uma obra
 export function GastoModal({ obraId }: { obraId: string }) {
