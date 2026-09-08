@@ -1,0 +1,207 @@
+// Schema do banco de dados - Sistema de Gestão de Obras
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== USUARIOS =====
+model User {
+  id           String     @id @default(cuid())
+  name         String
+  email        String     @unique
+  role         Role       @default(VIEWER)
+  status       UserStatus @default(PENDING)
+  avatar       String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  gastos       Gasto[]
+  pagamentos   Pagamento[]
+  createdObras Obra[]     @relation("CreatedBy")
+}
+
+enum Role {
+  ADMIN
+  GESTOR
+  ENGENHEIRO
+  VIEWER
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  INACTIVE
+}
+
+// ===== CLIENTES =====
+model Cliente {
+  id        String   @id @default(cuid())
+  nome      String
+  email     String?
+  telefone  String?
+  cpfCnpj   String?
+  endereco  String?
+  createdAt DateTime @default(now())
+
+  obras     Obra[]
+}
+
+// ===== OBRAS =====
+model Obra {
+  id              String           @id @default(cuid())
+  nome            String
+  descricao       String?
+  clienteId       String?
+  cliente         Cliente?         @relation(fields: [clienteId], references: [id])
+  endereco        String?
+  valorContrato   Decimal          @db.Decimal(12, 2)
+  dataInicio      DateTime
+  dataTermino     DateTime
+  status          ObraStatus       @default(EM_ANDAMENTO)
+  prioridade      Prioridade       @default(MEDIA)
+  progresso       Decimal          @default(0) @db.Decimal(5, 2)
+  cor             String           @default("#1565C0")
+  createdById     String?
+  createdBy       User?            @relation("CreatedBy", fields: [createdById], references: [id])
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  gastos          Gasto[]
+  pagamentos      Pagamento[]
+  inventarioItens ObraInventario[]
+  alertas         Alerta[]
+  contratos       Contrato[]
+}
+
+enum ObraStatus {
+  PLANEJAMENTO
+  EM_ANDAMENTO
+  PAUSADA
+  CONCLUIDA
+  CANCELADA
+}
+
+enum Prioridade {
+  BAIXA
+  MEDIA
+  ALTA
+  CRITICA
+}
+
+// ===== GASTOS =====
+model Gasto {
+  id          String         @id @default(cuid())
+  obraId      String
+  obra        Obra           @relation(fields: [obraId], references: [id])
+  userId      String?
+  user        User?          @relation(fields: [userId], references: [id])
+  descricao   String
+  categoria   GastoCategoria
+  valor       Decimal        @db.Decimal(12, 2)
+  data        DateTime
+  comprovante String?
+  observacao  String?
+  createdAt   DateTime       @default(now())
+}
+
+enum GastoCategoria {
+  MATERIAL
+  MAO_DE_OBRA
+  EQUIPAMENTO
+  CONTRATO
+  ADMINISTRATIVO
+  OUTRO
+}
+
+// ===== INVENTARIO =====
+model ItemInventario {
+  id            String   @id @default(cuid())
+  nome          String
+  unidade       String
+  valorUnitario Decimal  @db.Decimal(10, 2)
+  estoqueMinimo Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  obraItens     ObraInventario[]
+}
+
+model ObraInventario {
+  id          String         @id @default(cuid())
+  obraId      String
+  obra        Obra           @relation(fields: [obraId], references: [id])
+  itemId      String
+  item        ItemInventario @relation(fields: [itemId], references: [id])
+  qtdComprada Int
+  qtdUsada    Int            @default(0)
+  local       String?
+  updatedAt   DateTime       @updatedAt
+
+  @@unique([obraId, itemId])
+}
+
+// ===== PAGAMENTOS =====
+model Pagamento {
+  id             String          @id @default(cuid())
+  obraId         String
+  obra           Obra            @relation(fields: [obraId], references: [id])
+  userId         String?
+  user           User?           @relation(fields: [userId], references: [id])
+  descricao      String
+  valor          Decimal         @db.Decimal(12, 2)
+  dataVencimento DateTime
+  dataPagamento  DateTime?
+  status         PagamentoStatus @default(PENDENTE)
+  comprovante    String?
+  observacao     String?
+  createdAt      DateTime        @default(now())
+}
+
+enum PagamentoStatus {
+  PENDENTE
+  EFETUADO
+  EM_PROCESSAMENTO
+  ATRASADO
+  CANCELADO
+}
+
+// ===== CONTRATOS =====
+model Contrato {
+  id        String    @id @default(cuid())
+  obraId    String
+  obra      Obra      @relation(fields: [obraId], references: [id])
+  titulo    String
+  arquivo   String?
+  valor     Decimal?  @db.Decimal(12, 2)
+  dataAssin DateTime?
+  createdAt DateTime  @default(now())
+}
+
+// ===== ALERTAS (gerados pela IA) =====
+model Alerta {
+  id        String     @id @default(cuid())
+  obraId    String?
+  obra      Obra?      @relation(fields: [obraId], references: [id])
+  tipo      AlertaTipo
+  titulo    String
+  mensagem  String
+  lido      Boolean    @default(false)
+  createdAt DateTime   @default(now())
+}
+
+enum AlertaTipo {
+  ORCAMENTO_70
+  ORCAMENTO_85
+  ORCAMENTO_100
+  ORCAMENTO_ESTOURADO
+  PRAZO_VENCIDO
+  PRAZO_PROXIMO
+  ESTOQUE_BAIXO
+  DADOS_INCONSISTENTES
+  IA_PREVISAO
+}
