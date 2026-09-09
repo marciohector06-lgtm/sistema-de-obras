@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { Plus, FileText } from "lucide-react";
+import { Plus, FileText, Package } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { SectionCard } from "@/components/shared/SectionCard";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PropostasFiltros } from "@/components/propostas/PropostasFiltros";
@@ -55,14 +56,13 @@ export default async function PropostasPage({ searchParams }: PropostasPageProps
           <PropostasFiltros clientes={clientes} />
 
           {propostas.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border py-16 text-center">
-              <FileText className="size-8 text-text-muted" />
-              <p className="text-sm font-medium text-text-primary">Nenhuma proposta encontrada</p>
-              <p className="text-xs text-text-secondary">Crie a primeira proposta para começar.</p>
-              <Button render={<Link href="/propostas/nova" />} size="sm">
-                <Plus /> Nova Proposta
-              </Button>
-            </div>
+            <EmptyState
+              icon={FileText}
+              title="Nenhuma proposta encontrada"
+              description="Crie a primeira proposta para começar."
+              actionLabel="Nova Proposta"
+              actionHref="/propostas/nova"
+            />
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {propostas.map((proposta) => {
@@ -104,7 +104,7 @@ export default async function PropostasPage({ searchParams }: PropostasPageProps
         <TabsContent value="materiais" className="mt-4">
           <SectionCard title="Catálogo de Materiais" action={<MaterialModal />}>
             {materiais.length === 0 ? (
-              <p className="py-6 text-center text-sm text-text-muted">Nenhum material cadastrado ainda.</p>
+              <EmptyState icon={Package} title="Nenhum material cadastrado ainda." />
             ) : (
               <Table>
                 <TableHeader>

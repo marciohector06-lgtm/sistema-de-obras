@@ -26,6 +26,12 @@ interface PropostaFormProps {
 
 const SECAO_VAZIA = { titulo: "", itens: [{ materialId: "", descricao: "", unidade: "", quantidade: 1, precoUnitario: 0 }] };
 
+function toDateInputValue(date: unknown) {
+  if (!date) return "";
+  const d = new Date(date as string | number | Date);
+  return d.toISOString().slice(0, 10);
+}
+
 export function PropostaForm({ clientes, materiais, propostaId, defaultValues }: PropostaFormProps) {
   const router = useRouter();
   const [clienteOptions, setClienteOptions] = useState(clientes);
@@ -124,6 +130,32 @@ export function PropostaForm({ clientes, materiais, propostaId, defaultValues }:
             <div className="space-y-1.5">
               <Label htmlFor="impostos">Impostos (%)</Label>
               <Input id="impostos" type="number" step="0.01" {...register("impostos")} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="validade">Válida até</Label>
+              <Controller
+                control={control}
+                name="validade"
+                render={({ field }) => (
+                  <Input
+                    id="validade"
+                    type="date"
+                    value={toDateInputValue(field.value)}
+                    onChange={(e) => field.onChange(e.target.value ? new Date(`${e.target.value}T00:00:00`) : "")}
+                  />
+                )}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="condicoesPagamento">Condições de pagamento</Label>
+              <Input
+                id="condicoesPagamento"
+                placeholder="Ex: 30/60/90 dias"
+                {...register("condicoesPagamento")}
+              />
             </div>
           </div>
 

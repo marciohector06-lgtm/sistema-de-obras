@@ -1,16 +1,17 @@
-import { Wallet, TrendingUp, TrendingDown, PiggyBank } from "lucide-react";
+import { Wallet, TrendingUp, TrendingDown, PiggyBank, HardHat, FileText } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { SectionCard } from "@/components/shared/SectionCard";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PrestadorModal } from "@/components/prestadores/PrestadorModal";
 import { ContratoPrestadorModal } from "@/components/prestadores/ContratoPrestadorModal";
 import { MovimentoModal } from "@/components/prestadores/MovimentoModal";
 import { MovimentosFiltros } from "@/components/prestadores/MovimentosFiltros";
-import { calcExtrato, MOVIMENTO_TIPO_LABELS, MOVIMENTO_TIPO_VARIANT } from "@/lib/prestadores";
+import { calcExtrato, MOVIMENTO_TIPO_LABELS, MOVIMENTO_TIPO_VARIANT, PRESTADOR_CATEGORIA_LABELS } from "@/lib/prestadores";
 import { formatBRL, formatDateBR } from "@/lib/utils";
 import type { MovimentoTipo } from "@/types";
 
@@ -55,12 +56,13 @@ export default async function PrestadoresPage({ searchParams }: PrestadoresPageP
         <TabsContent value="prestadores" className="mt-4">
           <SectionCard title="Prestadores" action={<PrestadorModal />}>
             {prestadores.length === 0 ? (
-              <p className="py-6 text-center text-sm text-text-muted">Nenhum prestador cadastrado ainda.</p>
+              <EmptyState icon={HardHat} title="Nenhum prestador cadastrado ainda." />
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nome</TableHead>
+                    <TableHead>Contato</TableHead>
                     <TableHead>Documento</TableHead>
                     <TableHead>Categoria</TableHead>
                     <TableHead>Chave Pix</TableHead>
@@ -70,8 +72,20 @@ export default async function PrestadoresPage({ searchParams }: PrestadoresPageP
                   {prestadores.map((prestador) => (
                     <TableRow key={prestador.id}>
                       <TableCell>{prestador.nome}</TableCell>
+                      <TableCell className="text-text-secondary">
+                        {prestador.email || prestador.telefone ? (
+                          <div className="flex flex-col text-xs">
+                            {prestador.email && <span>{prestador.email}</span>}
+                            {prestador.telefone && <span>{prestador.telefone}</span>}
+                          </div>
+                        ) : (
+                          "—"
+                        )}
+                      </TableCell>
                       <TableCell className="text-text-secondary">{prestador.documento ?? "—"}</TableCell>
-                      <TableCell className="text-text-secondary">{prestador.categoria ?? "—"}</TableCell>
+                      <TableCell className="text-text-secondary">
+                        {prestador.categoria ? PRESTADOR_CATEGORIA_LABELS[prestador.categoria] : "—"}
+                      </TableCell>
                       <TableCell className="text-text-secondary">{prestador.chavePix ?? "—"}</TableCell>
                     </TableRow>
                   ))}
@@ -87,7 +101,7 @@ export default async function PrestadoresPage({ searchParams }: PrestadoresPageP
             action={<ContratoPrestadorModal prestadores={prestadores} />}
           >
             {contratos.length === 0 ? (
-              <p className="py-6 text-center text-sm text-text-muted">Nenhum contrato cadastrado ainda.</p>
+              <EmptyState icon={FileText} title="Nenhum contrato cadastrado ainda." />
             ) : (
               <Table>
                 <TableHeader>
@@ -137,7 +151,7 @@ export default async function PrestadoresPage({ searchParams }: PrestadoresPageP
 
           <SectionCard title="Extrato Geral">
             {extrato.linhas.length === 0 ? (
-              <p className="py-6 text-center text-sm text-text-muted">Nenhum movimento encontrado.</p>
+              <EmptyState icon={Wallet} title="Nenhum movimento encontrado." />
             ) : (
               <Table>
                 <TableHeader>

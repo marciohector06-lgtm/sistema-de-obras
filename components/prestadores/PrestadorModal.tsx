@@ -2,13 +2,20 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +24,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { prestadorSchema, type PrestadorInput, type PrestadorOutput } from "@/lib/validations";
+import { PRESTADOR_CATEGORIA_LABELS } from "@/lib/prestadores";
 
 export function PrestadorModal() {
   const router = useRouter();
@@ -25,6 +33,7 @@ export function PrestadorModal() {
   const {
     register,
     handleSubmit,
+    control,
     reset,
     formState: { errors, isSubmitting },
   } = useForm<PrestadorInput, unknown, PrestadorOutput>({
@@ -45,7 +54,7 @@ export function PrestadorModal() {
 
     toast.success("Prestador cadastrado");
     setOpen(false);
-    reset({ nome: "", documento: "", chavePix: "", categoria: "" });
+    reset({ nome: "", email: "", telefone: "", documento: "", chavePix: "", categoria: "" });
     router.refresh();
   }
 
@@ -67,12 +76,47 @@ export function PrestadorModal() {
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
+              <Label htmlFor="email">E-mail</Label>
+              <Input id="email" type="email" {...register("email")} />
+              {errors.email && <p className="text-xs text-danger">{errors.email.message}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="telefone">Telefone</Label>
+              <Input id="telefone" {...register("telefone")} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
               <Label htmlFor="documento">CPF/CNPJ</Label>
               <Input id="documento" {...register("documento")} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="categoria">Categoria</Label>
-              <Input id="categoria" placeholder="Fornecedor, Mão de obra..." {...register("categoria")} />
+              <Label>Categoria</Label>
+              <Controller
+                control={control}
+                name="categoria"
+                render={({ field }) => (
+                  <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Selecione">
+                        {(value: string) =>
+                          value
+                            ? PRESTADOR_CATEGORIA_LABELS[value as keyof typeof PRESTADOR_CATEGORIA_LABELS]
+                            : "Selecione"
+                        }
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(PRESTADOR_CATEGORIA_LABELS).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
           </div>
 

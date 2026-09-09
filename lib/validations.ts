@@ -16,6 +16,13 @@ export const obraSchema = z
     descricao: z.string().optional().or(z.literal("")),
     clienteId: z.string().optional().or(z.literal("")),
     endereco: z.string().optional().or(z.literal("")),
+    cidade: z.string().optional().or(z.literal("")),
+    tipo: z
+      .enum(["RESIDENCIAL", "COMERCIAL", "REFORMA", "INSTITUCIONAL", "OUTRO"])
+      .optional()
+      .or(z.literal(""))
+      .transform((v) => (v === "" ? undefined : v)),
+    responsavelTecnico: z.string().optional().or(z.literal("")),
     valorContrato: z.coerce.number().positive("O valor do contrato deve ser maior que zero"),
     dataInicio: z.coerce.date(),
     dataTermino: z.coerce.date(),
@@ -149,6 +156,11 @@ export const propostaSchema = z.object({
   bdi: z.coerce.number().min(0, "O BDI não pode ser negativo").default(0),
   impostos: z.coerce.number().min(0, "Os impostos não podem ser negativos").default(0),
   observacao: z.string().optional().or(z.literal("")),
+  validade: z
+    .union([z.coerce.date(), z.literal("")])
+    .optional()
+    .transform((v) => (v === "" || v === undefined ? undefined : v)),
+  condicoesPagamento: z.string().optional().or(z.literal("")),
   secoes: z.array(propostaSecaoSchema).min(1, "Adicione pelo menos uma seção"),
 });
 
@@ -161,11 +173,27 @@ export const propostaStatusSchema = z.object({
   status: z.enum(["ATIVA", "APROVADA", "REJEITADA"]),
 });
 
+export const PRESTADOR_CATEGORIAS = [
+  "MAO_DE_OBRA_GERAL",
+  "ELETRICA",
+  "HIDRAULICA",
+  "PINTURA",
+  "ALVENARIA",
+  "ACABAMENTO",
+  "OUTRO",
+] as const;
+
 export const prestadorSchema = z.object({
   nome: z.string().min(2, "Informe o nome do prestador"),
+  email: z.string().email("E-mail inválido").optional().or(z.literal("")),
+  telefone: z.string().optional().or(z.literal("")),
   documento: z.string().optional().or(z.literal("")),
   chavePix: z.string().optional().or(z.literal("")),
-  categoria: z.string().optional().or(z.literal("")),
+  categoria: z
+    .enum(PRESTADOR_CATEGORIAS)
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => (v === "" ? undefined : v)),
 });
 
 export type PrestadorInput = z.input<typeof prestadorSchema>;
@@ -209,4 +237,22 @@ export type ConfiguracaoEmailOutput = z.output<typeof configuracaoEmailSchema>;
 export const usuarioUpdateSchema = z.object({
   role: z.enum(["ADMIN", "GESTOR", "ENGENHEIRO", "VIEWER"]).optional(),
   status: z.enum(["PENDING", "ACTIVE", "INACTIVE"]).optional(),
+});
+
+export const usuarioConviteSchema = z.object({
+  name: z.string().min(2, "Informe o nome do usuário"),
+  email: z.string().email("E-mail inválido"),
+  cpf: z
+    .string()
+    .transform((v) => v.replace(/\D/g, ""))
+    .refine((v) => v.length === 11, "Informe um CPF válido (11 dígitos)"),
+  role: z.enum(["ADMIN", "GESTOR", "ENGENHEIRO", "VIEWER"]).default("VIEWER"),
+});
+
+export type UsuarioConviteInput = z.input<typeof usuarioConviteSchema>;
+export type UsuarioConviteOutput = z.output<typeof usuarioConviteSchema>;
+
+export const usuarioRegistroSchema = z.object({
+  name: z.string().min(2, "Informe o nome"),
+  email: z.string().email("E-mail inválido"),
 });

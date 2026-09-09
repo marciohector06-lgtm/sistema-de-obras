@@ -25,6 +25,8 @@ export const GET = protegido(async (_request, contexto) => {
     bdi: Number(proposta.bdi),
     impostos: Number(proposta.impostos),
     observacao: proposta.observacao,
+    validade: proposta.validade,
+    condicoesPagamento: proposta.condicoesPagamento,
     secoes: proposta.secoes.map((secao) => ({
       titulo: secao.titulo,
       itens: secao.itens.map((item) => ({

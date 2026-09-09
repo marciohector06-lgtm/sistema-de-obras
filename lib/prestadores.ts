@@ -1,4 +1,4 @@
-import type { MovimentoTipo } from "@/types";
+import type { MovimentoTipo, PrestadorCategoria } from "@/types";
 
 export const MOVIMENTO_TIPO_LABELS: Record<MovimentoTipo, string> = {
   ENTRADA: "Entrada",
@@ -8,6 +8,16 @@ export const MOVIMENTO_TIPO_LABELS: Record<MovimentoTipo, string> = {
 export const MOVIMENTO_TIPO_VARIANT: Record<MovimentoTipo, "success" | "danger"> = {
   ENTRADA: "success",
   SAIDA: "danger",
+};
+
+export const PRESTADOR_CATEGORIA_LABELS: Record<PrestadorCategoria, string> = {
+  MAO_DE_OBRA_GERAL: "Mão de obra geral",
+  ELETRICA: "Elétrica",
+  HIDRAULICA: "Hidráulica",
+  PINTURA: "Pintura",
+  ALVENARIA: "Alvenaria",
+  ACABAMENTO: "Acabamento",
+  OUTRO: "Outro",
 };
 
 export interface ExtratoLinha<T> {

@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { SectionCard } from "@/components/shared/SectionCard";
 import { AlertBanner } from "@/components/shared/AlertBanner";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { AlertasFiltros } from "@/components/alertas/AlertasFiltros";
 import { AlertaLidoButton } from "@/components/alertas/AlertaLidoButton";
 import { VerificarAlertasButton } from "@/components/alertas/VerificarAlertasButton";
@@ -54,7 +55,7 @@ export default async function AlertasPage({ searchParams }: AlertasPageProps) {
 
       <SectionCard>
         {alertas.length === 0 ? (
-          <p className="py-10 text-center text-sm text-text-muted">Nenhum alerta encontrado para esse filtro.</p>
+          <EmptyState icon={Bell} title="Nenhum alerta encontrado para esse filtro." />
         ) : (
           <div className="space-y-3">
             {alertas.map((alerta) => (

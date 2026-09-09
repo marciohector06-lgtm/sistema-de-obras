@@ -26,6 +26,26 @@ export function agruparGastosPorSemana(gastos: { data: Date | string; valor: num
     });
 }
 
+const MESES_ABREV = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+
+// Agrupa uma lista de gastos por mês (reaproveita o formato do GastosChart)
+export function agruparGastosPorMes(gastos: { data: Date | string; valor: number }[]): GastoSemanal[] {
+  const grupos = new Map<string, number>();
+
+  for (const gasto of gastos) {
+    const data = typeof gasto.data === "string" ? new Date(gasto.data) : gasto.data;
+    const chave = `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, "0")}`;
+    grupos.set(chave, (grupos.get(chave) ?? 0) + gasto.valor);
+  }
+
+  return Array.from(grupos.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([chave, total]) => {
+      const [ano, mes] = chave.split("-").map(Number);
+      return { semana: `${MESES_ABREV[mes - 1]}/${String(ano).slice(2)}`, total };
+    });
+}
+
 export interface SemanaAgenda<T> {
   chave: string;
   label: string;

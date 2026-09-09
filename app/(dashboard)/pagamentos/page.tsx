@@ -1,9 +1,10 @@
-import { Wallet, Clock, CheckCircle2, Loader, XCircle, AlertTriangle } from "lucide-react";
+import { Wallet, Clock, CheckCircle2, Loader, XCircle, AlertTriangle, CreditCard } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { KpiCard } from "@/components/shared/KpiCard";
 import { SectionCard } from "@/components/shared/SectionCard";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PagamentosSemanaNav } from "@/components/pagamentos/PagamentosSemanaNav";
 import { PagamentosFiltros } from "@/components/pagamentos/PagamentosFiltros";
@@ -80,7 +81,7 @@ export default async function PagamentosPage({ searchParams }: PagamentosPagePro
 
       <SectionCard title="Pagamentos da Semana">
         {linhasFiltradas.length === 0 ? (
-          <p className="py-6 text-center text-sm text-text-muted">Nenhum pagamento nesta semana.</p>
+          <EmptyState icon={CreditCard} title="Nenhum pagamento nesta semana." />
         ) : (
           <Table>
             <TableHeader>

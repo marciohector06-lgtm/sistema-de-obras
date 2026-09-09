@@ -1,5 +1,11 @@
+"use client";
+
 import Link from "next/link";
-import { Bell, LogOut, Settings, User as UserIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useTheme } from "next-themes";
+import { Bell, LogOut, Settings, Sun, Moon, User as UserIcon } from "lucide-react";
+import { CommandPalette } from "@/components/shared/CommandPalette";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -7,11 +13,13 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLinkItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MobileNav } from "./MobileNav";
+import { createClient } from "@/lib/supabase";
 import type { Role } from "@/types";
 
 interface HeaderProps {
@@ -29,6 +37,18 @@ const ROLE_LABELS: Record<Role, string> = {
 
 // Header superior fixo (navy) com notificações e menu do usuário
 export function Header({ userName = "Usuário", userRole = "ADMIN", alertasNaoLidos = 0 }: HeaderProps) {
+  const router = useRouter();
+  const { resolvedTheme, setTheme } = useTheme();
+  const [montado, setMontado] = useState(false);
+  useEffect(() => setMontado(true), []);
+
+  async function handleSair() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  }
+
   const iniciais = userName
     .split(" ")
     .map((n) => n[0])
@@ -40,10 +60,22 @@ export function Header({ userName = "Usuário", userRole = "ADMIN", alertasNaoLi
     <header className="flex h-13 items-center justify-between border-b border-navy-border bg-navy px-4 text-white">
       <div className="flex items-center gap-3">
         <MobileNav userRole={userRole} />
-        <span className="hidden text-sm font-semibold md:inline">Fornax Engenharia</span>
+        <span className="hidden text-sm font-semibold md:inline">{process.env.NEXT_PUBLIC_APP_NAME}</span>
       </div>
 
       <div className="flex items-center gap-1">
+        <CommandPalette />
+
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Alternar tema"
+          className="text-white hover:bg-navy-hover hover:text-white"
+          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+        >
+          {montado && resolvedTheme === "dark" ? <Sun className="size-4.5" /> : <Moon className="size-4.5" />}
+        </Button>
+
         <Link href="/alertas">
           <Button variant="ghost" size="icon" className="relative text-white hover:bg-navy-hover hover:text-white">
             <Bell className="size-4.5" />
@@ -73,16 +105,16 @@ export function Header({ userName = "Usuário", userRole = "ADMIN", alertasNaoLi
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuLinkItem render={<Link href="/perfil" />}>
                 <UserIcon /> Meu perfil
-              </DropdownMenuItem>
-              <DropdownMenuItem>
+              </DropdownMenuLinkItem>
+              <DropdownMenuLinkItem render={<Link href="/configuracoes" />}>
                 <Settings /> Configurações
-              </DropdownMenuItem>
+              </DropdownMenuLinkItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem variant="destructive">
+              <DropdownMenuItem variant="destructive" onClick={handleSair}>
                 <LogOut /> Sair
               </DropdownMenuItem>
             </DropdownMenuGroup>

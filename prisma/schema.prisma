@@ -13,6 +13,7 @@ model User {
   id           String     @id @default(cuid())
   name         String
   email        String     @unique
+  cpf          String?
   role         Role       @default(VIEWER)
   status       UserStatus @default(PENDING)
   avatar       String?
@@ -61,6 +62,9 @@ model Obra {
   clienteId       String?
   cliente         Cliente?         @relation(fields: [clienteId], references: [id])
   endereco        String?
+  cidade          String?
+  tipo            TipoObra?
+  responsavelTecnico String?
   valorContrato   Decimal          @db.Decimal(12, 2)
   dataInicio      DateTime
   dataTermino     DateTime
@@ -99,6 +103,14 @@ enum Prioridade {
   MEDIA
   ALTA
   CRITICA
+}
+
+enum TipoObra {
+  RESIDENCIAL
+  COMERCIAL
+  REFORMA
+  INSTITUCIONAL
+  OUTRO
 }
 
 // ===== GASTOS =====
@@ -254,6 +266,8 @@ model Proposta {
   bdi           Decimal         @default(0) @db.Decimal(6, 2)
   impostos      Decimal         @default(0) @db.Decimal(6, 2)
   observacao    String?
+  validade            DateTime?
+  condicoesPagamento  String?
   createdById   String?
   createdBy     User?           @relation("PropostaCreatedBy", fields: [createdById], references: [id])
   createdAt     DateTime        @default(now())
@@ -313,15 +327,27 @@ enum PropostaEventoTipo {
 model Prestador {
   id        String   @id @default(cuid())
   nome      String
+  email     String?
+  telefone  String?
   documento String?
   chavePix  String?
-  categoria String?
+  categoria PrestadorCategoria?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   contratos  ContratoPrestador[]
   pagamentos Pagamento[]
   movimentos MovimentoFinanceiro[]
+}
+
+enum PrestadorCategoria {
+  MAO_DE_OBRA_GERAL
+  ELETRICA
+  HIDRAULICA
+  PINTURA
+  ALVENARIA
+  ACABAMENTO
+  OUTRO
 }
 
 model ContratoPrestador {

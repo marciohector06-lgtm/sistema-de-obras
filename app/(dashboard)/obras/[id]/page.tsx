@@ -14,7 +14,7 @@ import { PrevisaoRefreshButton } from "@/components/obras/PrevisaoRefreshButton"
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { agruparGastosPorSemana } from "@/lib/gastos";
 import { formatBRL, formatDateBR } from "@/lib/utils";
-import { GASTO_CATEGORIA_LABELS as CATEGORIA_LABELS } from "@/lib/obra";
+import { GASTO_CATEGORIA_LABELS as CATEGORIA_LABELS, TIPO_OBRA_LABELS } from "@/lib/obra";
 import { calcularRiscoObra, RISCO_LABELS, RISCO_VARIANT } from "@/lib/ia/risco";
 
 interface ObraDetailPageProps {
@@ -97,6 +97,18 @@ export default async function ObraDetailPage({ params }: ObraDetailPageProps) {
             <div className="flex justify-between">
               <dt className="text-text-secondary">Endereço</dt>
               <dd className="text-right text-text-primary">{obra.endereco ?? "—"}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-text-secondary">Cidade</dt>
+              <dd className="text-text-primary">{obra.cidade ?? "—"}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-text-secondary">Tipo de obra</dt>
+              <dd className="text-text-primary">{obra.tipo ? TIPO_OBRA_LABELS[obra.tipo] : "—"}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-text-secondary">Responsável técnico</dt>
+              <dd className="text-text-primary">{obra.responsavelTecnico ?? "—"}</dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-text-secondary">Início</dt>

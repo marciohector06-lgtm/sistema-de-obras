@@ -50,6 +50,8 @@ export interface PropostaPdfData {
   bdi: number;
   impostos: number;
   observacao: string | null;
+  validade: Date | null;
+  condicoesPagamento: string | null;
   secoes: {
     titulo: string;
     itens: { descricao: string; unidade: string; quantidade: number; precoUnitario: number }[];
@@ -73,6 +75,12 @@ function PropostaDocument({ proposta }: { proposta: PropostaPdfData }) {
             <Text>Data: {formatDateBR(proposta.createdAt)}</Text>
             <Text>Status: {PROPOSTA_STATUS_LABELS[proposta.status]}</Text>
           </View>
+          {(proposta.validade || proposta.condicoesPagamento) && (
+            <View style={styles.linhaInfo}>
+              {proposta.validade && <Text>Válida até: {formatDateBR(proposta.validade)}</Text>}
+              {proposta.condicoesPagamento && <Text>Pagamento: {proposta.condicoesPagamento}</Text>}
+            </View>
+          )}
         </View>
 
         {proposta.secoes.map((secao, secaoIndex) => (

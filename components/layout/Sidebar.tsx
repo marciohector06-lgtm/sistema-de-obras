@@ -30,8 +30,7 @@ export function Sidebar({ userRole = "ADMIN", className }: SidebarProps) {
           <Zap className="size-4 text-white" />
         </div>
         <div className="leading-none">
-          <p className="text-sm font-bold tracking-tight">BiddingTech</p>
-          <p className="text-[10px] text-white/50">Fornax Engenharia</p>
+          <p className="text-sm font-bold tracking-tight">{process.env.NEXT_PUBLIC_APP_NAME}</p>
         </div>
       </div>
 

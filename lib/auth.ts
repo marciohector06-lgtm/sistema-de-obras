@@ -20,7 +20,15 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   if (!user?.email) return null;
 
   const usuario = await prisma.user.findUnique({ where: { email: user.email } });
-  return usuario;
+  if (usuario) return usuario;
+
+  // Primeiro acesso após o autocadastro via Supabase Auth - ainda não existe a linha em User
+  const nome = (user.user_metadata?.name as string | undefined) || user.email;
+  try {
+    return await prisma.user.create({ data: { name: nome, email: user.email } });
+  } catch {
+    return prisma.user.findUnique({ where: { email: user.email } });
+  }
 }
 
 export type GuardResult = { usuario: SessionUser } | { erro: NextResponse };

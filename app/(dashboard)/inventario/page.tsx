@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { InventarioFiltros } from "@/components/inventario/InventarioFiltros";
 import { InventarioModal } from "@/components/inventario/InventarioModal";
 import { BaixaEstoqueModal, type EstoqueOption } from "@/components/inventario/BaixaEstoqueModal";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { formatBRL } from "@/lib/utils";
 import { calcStatusEstoque } from "@/lib/inventario";
 
@@ -101,7 +102,7 @@ export default async function InventarioPage({ searchParams }: InventarioPagePro
 
       <SectionCard title="Itens em Estoque">
         {linhas.length === 0 ? (
-          <p className="py-6 text-center text-sm text-text-muted">Nenhum item em estoque ainda.</p>
+          <EmptyState icon={Package} title="Nenhum item em estoque ainda." />
         ) : (
           <Table>
             <TableHeader>
@@ -144,7 +145,7 @@ export default async function InventarioPage({ searchParams }: InventarioPagePro
 
       <SectionCard title="Locais de Armazenamento" className="mt-6">
         {locaisResumo.length === 0 ? (
-          <p className="py-6 text-center text-sm text-text-muted">Nenhum local cadastrado ainda.</p>
+          <EmptyState icon={Package} title="Nenhum local cadastrado ainda." />
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {locaisResumo.map((local) => (

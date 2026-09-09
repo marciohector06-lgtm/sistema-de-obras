@@ -1,5 +1,8 @@
 import { cn } from "@/lib/utils";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+
+const VARIACAO_ICON = { alta: TrendingUp, baixa: TrendingDown, estavel: Minus };
 
 interface KpiCardProps {
   label: string;
@@ -8,6 +11,7 @@ interface KpiCardProps {
   variacao?: {
     valor: string;
     tipo: "positiva" | "negativa" | "neutra";
+    direcao: "alta" | "baixa" | "estavel";
   };
   valueClassName?: string;
   className?: string;
@@ -26,7 +30,7 @@ export function KpiCard({ label, value, icon: Icon, variacao, valueClassName, cl
         <span className="truncate text-xs font-medium text-text-secondary">{label}</span>
         {Icon && <Icon className="size-4 shrink-0 text-text-muted" />}
       </div>
-      <div className="flex items-end justify-between gap-2">
+      <div className="flex flex-col gap-0.5">
         <span
           className={cn(
             "min-w-0 truncate text-lg font-bold tracking-tight text-text-primary sm:text-2xl",
@@ -38,12 +42,16 @@ export function KpiCard({ label, value, icon: Icon, variacao, valueClassName, cl
         {variacao && (
           <span
             className={cn(
-              "mb-0.5 shrink-0 whitespace-nowrap text-xs font-medium",
+              "flex shrink-0 items-center gap-0.5 truncate text-xs font-medium",
               variacao.tipo === "positiva" && "text-success",
               variacao.tipo === "negativa" && "text-danger",
               variacao.tipo === "neutra" && "text-text-muted"
             )}
           >
+            {(() => {
+              const VariacaoIcon = VARIACAO_ICON[variacao.direcao];
+              return <VariacaoIcon className="size-3 shrink-0" />;
+            })()}
             {variacao.valor}
           </span>
         )}

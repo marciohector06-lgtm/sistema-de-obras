@@ -74,6 +74,33 @@
   --sidebar-ring: var(--primary-lt);
 }
 
+.dark {
+  /* Background */
+  --bg-app: #0d121c;
+  --surface: #161c29;
+  --border-DEFAULT: #29323f;
+
+  /* Status (tons mais claros para contraste em fundo escuro) */
+  --success: #4caf50;
+  --success-bg: #16281c;
+  --warning: #ffa726;
+  --warning-bg: #2b2011;
+  --danger: #ef5350;
+  --danger-bg: #2a1517;
+  --info: #29b6f6;
+  --info-bg: #10232c;
+
+  /* Texto */
+  --text-primary: #eef2f7;
+  --text-secondary: #9aa6b5;
+  --text-muted: #6b7684;
+
+  /* Tokens shadcn/ui mapeados */
+  --muted: #1d2531;
+  --secondary: #16233a;
+  --accent: #16233a;
+}
+
 @theme inline {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 

@@ -1,11 +1,14 @@
+import { Users } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { SectionCard } from "@/components/shared/SectionCard";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { UsuarioRoleSelect } from "@/components/usuarios/UsuarioRoleSelect";
 import { UsuarioStatusAcoes } from "@/components/usuarios/UsuarioStatusAcoes";
+import { UsuarioConviteModal } from "@/components/usuarios/UsuarioConviteModal";
 
 const STATUS_LABELS = { PENDING: "Pendente", ACTIVE: "Ativo", INACTIVE: "Inativo" } as const;
 const STATUS_VARIANT = { PENDING: "warning", ACTIVE: "success", INACTIVE: "neutral" } as const;
@@ -15,17 +18,18 @@ export default async function UsuariosPage() {
 
   return (
     <div>
-      <PageHeader title="Usuários" />
+      <PageHeader title="Usuários" actions={<UsuarioConviteModal />} />
 
       <SectionCard title="Usuários do Sistema" description="Aprovação de acesso e gestão de perfis">
         {usuarios.length === 0 ? (
-          <p className="py-6 text-center text-sm text-text-muted">Nenhum usuário cadastrado ainda.</p>
+          <EmptyState icon={Users} title="Nenhum usuário cadastrado ainda." />
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>
                 <TableHead>E-mail</TableHead>
+                <TableHead>CPF</TableHead>
                 <TableHead>Perfil</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="w-40" />
@@ -53,6 +57,9 @@ export default async function UsuariosPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-text-secondary">{usuario.email}</TableCell>
+                    <TableCell className="text-text-secondary">
+                      {usuario.cpf ? usuario.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") : "—"}
+                    </TableCell>
                     <TableCell>
                       <UsuarioRoleSelect userId={usuario.id} role={usuario.role} />
                     </TableCell>

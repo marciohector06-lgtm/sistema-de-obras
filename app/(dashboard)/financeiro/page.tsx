@@ -9,7 +9,8 @@ import { OrcamentoGastoChart, type ObraChartData } from "@/components/financeiro
 import { CategoriaDonutChart, type CategoriaChartData } from "@/components/financeiro/CategoriaDonutChart";
 import { EntradaModal } from "@/components/financeiro/EntradaModal";
 import { ContratoModal } from "@/components/financeiro/ContratoModal";
-import { Wallet, TrendingDown, PiggyBank, Building2 } from "lucide-react";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { Wallet, TrendingDown, TrendingUp, PiggyBank, Building2, FileText } from "lucide-react";
 import { formatBRL, formatDateBR } from "@/lib/utils";
 import { calcResumoFinanceiro, getPeriodoRange } from "@/lib/financeiro";
 import { agruparPorSemanaComItens } from "@/lib/gastos";
@@ -139,7 +140,7 @@ export default async function FinanceiroPage({ searchParams }: FinanceiroPagePro
         <TabsContent value="agenda" className="mt-4">
           <SectionCard title="Agenda de Gastos" description="Gastos agrupados por semana">
             {agendaSemanas.length === 0 ? (
-              <p className="py-6 text-center text-sm text-text-muted">Nenhum gasto no período selecionado.</p>
+              <EmptyState icon={Wallet} title="Nenhum gasto no período selecionado." />
             ) : (
               <div className="space-y-6">
                 {agendaSemanas.map((semana) => (
@@ -186,7 +187,7 @@ export default async function FinanceiroPage({ searchParams }: FinanceiroPagePro
             action={<EntradaModal obras={todasObras} />}
           >
             {entradas.length === 0 ? (
-              <p className="py-6 text-center text-sm text-text-muted">Nenhuma entrada registrada ainda.</p>
+              <EmptyState icon={TrendingUp} title="Nenhuma entrada registrada ainda." />
             ) : (
               <Table>
                 <TableHeader>
@@ -221,7 +222,7 @@ export default async function FinanceiroPage({ searchParams }: FinanceiroPagePro
             action={<ContratoModal obras={todasObras} />}
           >
             {contratos.length === 0 ? (
-              <p className="py-6 text-center text-sm text-text-muted">Nenhum contrato cadastrado ainda.</p>
+              <EmptyState icon={FileText} title="Nenhum contrato cadastrado ainda." />
             ) : (
               <Table>
                 <TableHeader>

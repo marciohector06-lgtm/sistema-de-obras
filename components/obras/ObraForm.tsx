@@ -20,7 +20,7 @@ import {
 import { SectionCard } from "@/components/shared/SectionCard";
 import { ClienteSelect, type ClienteOption } from "@/components/obras/ClienteSelect";
 import { obraSchema, type ObraInput, type ObraOutput } from "@/lib/validations";
-import { OBRA_STATUS_LABELS } from "@/lib/obra";
+import { OBRA_STATUS_LABELS, TIPO_OBRA_LABELS } from "@/lib/obra";
 
 const PRIORIDADE_LABELS = { BAIXA: "Baixa", MEDIA: "Média", ALTA: "Alta", CRITICA: "Crítica" };
 
@@ -110,6 +110,42 @@ export function ObraForm({ clientes, obraId, defaultValues }: ObraFormProps) {
           <div className="space-y-1.5">
             <Label htmlFor="endereco">Endereço</Label>
             <Input id="endereco" {...register("endereco")} />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="cidade">Cidade</Label>
+            <Input id="cidade" {...register("cidade")} />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Tipo de obra</Label>
+            <Controller
+              control={control}
+              name="tipo"
+              render={({ field }) => (
+                <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecione o tipo">
+                      {(value: string) =>
+                        value ? TIPO_OBRA_LABELS[value as keyof typeof TIPO_OBRA_LABELS] : "Selecione o tipo"
+                      }
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(TIPO_OBRA_LABELS).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="responsavelTecnico">Responsável técnico</Label>
+            <Input id="responsavelTecnico" {...register("responsavelTecnico")} />
           </div>
 
           <div className="space-y-1.5 sm:col-span-2">

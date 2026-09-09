@@ -1,18 +1,26 @@
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Header } from "@/components/layout/Header";
 import { prisma } from "@/lib/prisma";
+import { getSessionUser } from "@/lib/auth";
 
 // Layout compartilhado por todas as páginas autenticadas (sidebar + header)
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const alertasNaoLidos = await prisma.alerta.count({ where: { lido: false } });
+  const [alertasNaoLidos, usuario] = await Promise.all([
+    prisma.alerta.count({ where: { lido: false } }),
+    getSessionUser(),
+  ]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       <div className="hidden md:block">
-        <Sidebar />
+        <Sidebar userRole={usuario?.role} />
       </div>
       <div className="flex flex-1 flex-col overflow-hidden">
-        <Header userName="Márcio Héctor" userRole="ADMIN" alertasNaoLidos={alertasNaoLidos} />
+        <Header
+          userName={usuario?.name ?? "Usuário"}
+          userRole={usuario?.role ?? "VIEWER"}
+          alertasNaoLidos={alertasNaoLidos}
+        />
         <main className="flex-1 overflow-y-auto p-6">{children}</main>
       </div>
     </div>

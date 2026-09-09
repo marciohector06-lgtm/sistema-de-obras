@@ -9,6 +9,17 @@ export type ObraStatus =
 
 export type Prioridade = "BAIXA" | "MEDIA" | "ALTA" | "CRITICA";
 
+export type TipoObra = "RESIDENCIAL" | "COMERCIAL" | "REFORMA" | "INSTITUCIONAL" | "OUTRO";
+
+export type PrestadorCategoria =
+  | "MAO_DE_OBRA_GERAL"
+  | "ELETRICA"
+  | "HIDRAULICA"
+  | "PINTURA"
+  | "ALVENARIA"
+  | "ACABAMENTO"
+  | "OUTRO";
+
 export type GastoCategoria =
   | "MATERIAL"
   | "MAO_DE_OBRA"

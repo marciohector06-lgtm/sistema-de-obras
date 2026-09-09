@@ -40,8 +40,8 @@ export default function LoginPage() {
             <Zap className="size-6 text-white" />
           </div>
           <div className="text-center">
-            <h1 className="text-lg font-bold text-white">BiddingTech</h1>
-            <p className="text-xs text-white/50">Fornax Engenharia · Gestão de Obras</p>
+            <h1 className="text-lg font-bold text-white">{process.env.NEXT_PUBLIC_APP_NAME}</h1>
+            <p className="text-xs text-white/50">Gestão de Obras</p>
           </div>
         </div>
 

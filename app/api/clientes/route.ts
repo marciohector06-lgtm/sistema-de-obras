@@ -4,8 +4,14 @@ import { clienteSchema } from "@/lib/validations";
 import { protegido } from "@/lib/api-handler";
 import { sanitizarObjeto } from "@/lib/sanitize";
 
-export const GET = protegido(async () => {
-  const clientes = await prisma.cliente.findMany({ orderBy: { nome: "asc" } });
+export const GET = protegido(async (request) => {
+  const { searchParams } = new URL(request.url);
+  const q = searchParams.get("q");
+
+  const clientes = await prisma.cliente.findMany({
+    where: q ? { nome: { contains: q, mode: "insensitive" } } : undefined,
+    orderBy: { nome: "asc" },
+  });
   return NextResponse.json(clientes);
 });
 

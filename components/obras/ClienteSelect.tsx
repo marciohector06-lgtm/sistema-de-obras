@@ -40,6 +40,8 @@ export function ClienteSelect({ clientes, value, onChange }: ClienteSelectProps)
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
   const [telefone, setTelefone] = useState("");
+  const [cpfCnpj, setCpfCnpj] = useState("");
+  const [endereco, setEndereco] = useState("");
   const [salvando, setSalvando] = useState(false);
 
   async function handleCriarCliente(e: React.FormEvent) {
@@ -49,7 +51,7 @@ export function ClienteSelect({ clientes, value, onChange }: ClienteSelectProps)
     const res = await fetch("/api/clientes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nome, email, telefone }),
+      body: JSON.stringify({ nome, email, telefone, cpfCnpj, endereco }),
     });
 
     if (!res.ok) {
@@ -66,6 +68,8 @@ export function ClienteSelect({ clientes, value, onChange }: ClienteSelectProps)
     setNome("");
     setEmail("");
     setTelefone("");
+    setCpfCnpj("");
+    setEndereco("");
     setSalvando(false);
     toast.success("Cliente cadastrado");
   }
@@ -118,6 +122,19 @@ export function ClienteSelect({ clientes, value, onChange }: ClienteSelectProps)
             <div className="space-y-1.5">
               <Label htmlFor="cliente-telefone">Telefone</Label>
               <Input id="cliente-telefone" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="cliente-documento">CPF/CNPJ</Label>
+              <Input
+                id="cliente-documento"
+                placeholder="000.000.000-00 ou 00.000.000/0001-00"
+                value={cpfCnpj}
+                onChange={(e) => setCpfCnpj(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="cliente-endereco">Endereço</Label>
+              <Input id="cliente-endereco" value={endereco} onChange={(e) => setEndereco(e.target.value)} />
             </div>
             <DialogFooter>
               <Button type="submit" disabled={salvando}>
