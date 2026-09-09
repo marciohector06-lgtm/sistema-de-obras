@@ -31,9 +31,9 @@ export default async function AlertasPage({ searchParams }: AlertasPageProps) {
     prisma.alerta.findMany({ where: { lido: false }, select: { tipo: true } }),
   ]);
 
-  const criticos = naoLidos.filter((a) => ALERTA_TIPO_VARIANT[a.tipo] === "danger").length;
-  const avisos = naoLidos.filter((a) => ALERTA_TIPO_VARIANT[a.tipo] === "warning").length;
-  const informativos = naoLidos.filter((a) => ALERTA_TIPO_VARIANT[a.tipo] === "info").length;
+  const criticos = naoLidos.filter((a: { tipo: AlertaTipo }) => ALERTA_TIPO_VARIANT[a.tipo] === "danger").length;
+  const avisos = naoLidos.filter((a: { tipo: AlertaTipo }) => ALERTA_TIPO_VARIANT[a.tipo] === "warning").length;
+  const informativos = naoLidos.filter((a: { tipo: AlertaTipo }) => ALERTA_TIPO_VARIANT[a.tipo] === "info").length;
 
   return (
     <div>
