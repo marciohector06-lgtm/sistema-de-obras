@@ -24,6 +24,27 @@ export type PagamentoStatus =
   | "ATRASADO"
   | "CANCELADO";
 
+export type AlertaTipo =
+  | "ORCAMENTO_70"
+  | "ORCAMENTO_85"
+  | "ORCAMENTO_100"
+  | "ORCAMENTO_ESTOURADO"
+  | "PRAZO_VENCIDO"
+  | "PRAZO_PROXIMO"
+  | "ESTOQUE_BAIXO"
+  | "DADOS_INCONSISTENTES"
+  | "IA_PREVISAO";
+
+export type PropostaStatus = "ATIVA" | "APROVADA" | "REJEITADA";
+
+export type PropostaEventoTipo = "CRIADA" | "EDITADA" | "STATUS_ALTERADO";
+
+export type MovimentoTipo = "ENTRADA" | "SAIDA";
+
+export type ImportacaoEmailTipo = "NFE" | "PIX_INTER" | "GERAL";
+
+export type ImportacaoEmailStatus = "SUCESSO" | "ERRO";
+
 export type Role = "ADMIN" | "GESTOR" | "ENGENHEIRO" | "VIEWER";
 
 export type UserStatus = "PENDING" | "ACTIVE" | "INACTIVE";

@@ -19,9 +19,11 @@ model User {
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
-  gastos       Gasto[]
-  pagamentos   Pagamento[]
-  createdObras Obra[]     @relation("CreatedBy")
+  gastos          Gasto[]
+  pagamentos      Pagamento[]
+  createdObras    Obra[]           @relation("CreatedBy")
+  createdPropostas Proposta[]      @relation("PropostaCreatedBy")
+  propostaEventos PropostaEvento[]
 }
 
 enum Role {
@@ -48,6 +50,7 @@ model Cliente {
   createdAt DateTime @default(now())
 
   obras     Obra[]
+  propostas Proposta[]
 }
 
 // ===== OBRAS =====
@@ -70,12 +73,17 @@ model Obra {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
+  previsaoCusto         Decimal?  @db.Decimal(12, 2)
+  previsaoJustificativa String?
+  previsaoAtualizadaEm  DateTime?
+
   gastos          Gasto[]
   entradas        Entrada[]
   pagamentos      Pagamento[]
   inventarioItens ObraInventario[]
   alertas         Alerta[]
   contratos       Contrato[]
+  movimentos      MovimentoFinanceiro[]
 }
 
 enum ObraStatus {
@@ -165,6 +173,8 @@ model Pagamento {
   obra           Obra            @relation(fields: [obraId], references: [id])
   userId         String?
   user           User?           @relation(fields: [userId], references: [id])
+  prestadorId    String?
+  prestador      Prestador?      @relation(fields: [prestadorId], references: [id])
   descricao      String
   valor          Decimal         @db.Decimal(12, 2)
   dataVencimento DateTime
@@ -217,4 +227,163 @@ enum AlertaTipo {
   ESTOQUE_BAIXO
   DADOS_INCONSISTENTES
   IA_PREVISAO
+}
+
+// ===== MATERIAIS =====
+model Material {
+  id        String   @id @default(cuid())
+  descricao String
+  unidade   String
+  preco     Decimal  @db.Decimal(12, 2)
+  ncm       String?
+  origem    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  propostaItens PropostaItem[]
+}
+
+// ===== PROPOSTAS/ORCAMENTOS =====
+model Proposta {
+  id            String          @id @default(cuid())
+  numero        Int             @unique @default(autoincrement())
+  titulo        String
+  clienteId     String
+  cliente       Cliente         @relation(fields: [clienteId], references: [id])
+  status        PropostaStatus  @default(ATIVA)
+  bdi           Decimal         @default(0) @db.Decimal(6, 2)
+  impostos      Decimal         @default(0) @db.Decimal(6, 2)
+  observacao    String?
+  createdById   String?
+  createdBy     User?           @relation("PropostaCreatedBy", fields: [createdById], references: [id])
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  secoes        PropostaSecao[]
+  eventos       PropostaEvento[]
+}
+
+enum PropostaStatus {
+  ATIVA
+  APROVADA
+  REJEITADA
+}
+
+model PropostaSecao {
+  id         String   @id @default(cuid())
+  propostaId String
+  proposta   Proposta @relation(fields: [propostaId], references: [id], onDelete: Cascade)
+  titulo     String
+  ordem      Int      @default(0)
+
+  itens      PropostaItem[]
+}
+
+model PropostaItem {
+  id            String         @id @default(cuid())
+  secaoId       String
+  secao         PropostaSecao  @relation(fields: [secaoId], references: [id], onDelete: Cascade)
+  materialId    String?
+  material      Material?      @relation(fields: [materialId], references: [id])
+  descricao     String
+  unidade       String
+  quantidade    Decimal        @db.Decimal(12, 3)
+  precoUnitario Decimal        @db.Decimal(12, 2)
+  ordem         Int            @default(0)
+}
+
+model PropostaEvento {
+  id         String         @id @default(cuid())
+  propostaId String
+  proposta   Proposta       @relation(fields: [propostaId], references: [id], onDelete: Cascade)
+  tipo       PropostaEventoTipo
+  mensagem   String
+  userId     String?
+  user       User?          @relation(fields: [userId], references: [id])
+  createdAt  DateTime       @default(now())
+}
+
+enum PropostaEventoTipo {
+  CRIADA
+  EDITADA
+  STATUS_ALTERADO
+}
+
+// ===== PRESTADORES & FINANCEIRO UNIFICADO =====
+model Prestador {
+  id        String   @id @default(cuid())
+  nome      String
+  documento String?
+  chavePix  String?
+  categoria String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  contratos  ContratoPrestador[]
+  pagamentos Pagamento[]
+  movimentos MovimentoFinanceiro[]
+}
+
+model ContratoPrestador {
+  id          String    @id @default(cuid())
+  prestadorId String
+  prestador   Prestador @relation(fields: [prestadorId], references: [id])
+  titulo      String
+  arquivo     String?
+  valor       Decimal?  @db.Decimal(12, 2)
+  dataAssin   DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+model MovimentoFinanceiro {
+  id          String        @id @default(cuid())
+  tipo        MovimentoTipo
+  descricao   String
+  valor       Decimal       @db.Decimal(12, 2)
+  data        DateTime
+  categoria   String?
+  obraId      String?
+  obra        Obra?         @relation(fields: [obraId], references: [id])
+  prestadorId String?
+  prestador   Prestador?    @relation(fields: [prestadorId], references: [id])
+  createdAt   DateTime      @default(now())
+}
+
+enum MovimentoTipo {
+  ENTRADA
+  SAIDA
+}
+
+// ===== AUTOMACOES VIA E-MAIL =====
+model ConfiguracaoEmail {
+  id                  String    @id @default("config")
+  host                String
+  porta               Int       @default(993)
+  usuario             String
+  senhaCriptografada  String
+  usarSsl             Boolean   @default(true)
+  ativo               Boolean   @default(false)
+  ultimaVerificacaoEm DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+}
+
+model ImportacaoEmailLog {
+  id                   String                @id @default(cuid())
+  tipo                 ImportacaoEmailTipo
+  status               ImportacaoEmailStatus
+  mensagem             String
+  quantidadeProcessada Int                    @default(0)
+  createdAt            DateTime               @default(now())
+}
+
+enum ImportacaoEmailTipo {
+  NFE
+  PIX_INTER
+  GERAL
+}
+
+enum ImportacaoEmailStatus {
+  SUCESSO
+  ERRO
 }

@@ -105,6 +105,7 @@ export type BaixaEstoqueOutput = z.output<typeof baixaEstoqueSchema>;
 
 export const pagamentoSchema = z.object({
   obraId: z.string().min(1, "Selecione a obra"),
+  prestadorId: z.string().optional().or(z.literal("")),
   descricao: z.string().min(2, "Informe a descrição do pagamento"),
   valor: z.coerce.number().positive("O valor deve ser maior que zero"),
   dataVencimento: z.coerce.date(),
@@ -117,6 +118,93 @@ export type PagamentoOutput = z.output<typeof pagamentoSchema>;
 export const pagamentoStatusSchema = z.object({
   status: z.enum(["PENDENTE", "EFETUADO", "EM_PROCESSAMENTO", "ATRASADO", "CANCELADO"]),
 });
+
+export const materialSchema = z.object({
+  descricao: z.string().min(2, "Informe a descrição do material"),
+  unidade: z.string().min(1, "Informe a unidade (ex: kg, m², unidade)"),
+  preco: z.coerce.number().nonnegative("O preço não pode ser negativo"),
+  ncm: z.string().optional().or(z.literal("")),
+  origem: z.string().optional().or(z.literal("")),
+});
+
+export type MaterialInput = z.input<typeof materialSchema>;
+export type MaterialOutput = z.output<typeof materialSchema>;
+
+export const propostaItemSchema = z.object({
+  materialId: z.string().optional().or(z.literal("")),
+  descricao: z.string().min(1, "Informe a descrição do item"),
+  unidade: z.string().min(1, "Informe a unidade"),
+  quantidade: z.coerce.number().positive("A quantidade deve ser maior que zero"),
+  precoUnitario: z.coerce.number().nonnegative("O preço unitário não pode ser negativo"),
+});
+
+export const propostaSecaoSchema = z.object({
+  titulo: z.string().min(1, "Informe o título da seção"),
+  itens: z.array(propostaItemSchema).min(1, "Adicione pelo menos um item na seção"),
+});
+
+export const propostaSchema = z.object({
+  titulo: z.string().min(2, "Informe o título da proposta"),
+  clienteId: z.string().min(1, "Selecione o cliente"),
+  bdi: z.coerce.number().min(0, "O BDI não pode ser negativo").default(0),
+  impostos: z.coerce.number().min(0, "Os impostos não podem ser negativos").default(0),
+  observacao: z.string().optional().or(z.literal("")),
+  secoes: z.array(propostaSecaoSchema).min(1, "Adicione pelo menos uma seção"),
+});
+
+export type PropostaItemInput = z.input<typeof propostaItemSchema>;
+export type PropostaSecaoInput = z.input<typeof propostaSecaoSchema>;
+export type PropostaInput = z.input<typeof propostaSchema>;
+export type PropostaOutput = z.output<typeof propostaSchema>;
+
+export const propostaStatusSchema = z.object({
+  status: z.enum(["ATIVA", "APROVADA", "REJEITADA"]),
+});
+
+export const prestadorSchema = z.object({
+  nome: z.string().min(2, "Informe o nome do prestador"),
+  documento: z.string().optional().or(z.literal("")),
+  chavePix: z.string().optional().or(z.literal("")),
+  categoria: z.string().optional().or(z.literal("")),
+});
+
+export type PrestadorInput = z.input<typeof prestadorSchema>;
+export type PrestadorOutput = z.output<typeof prestadorSchema>;
+
+export const contratoPrestadorSchema = z.object({
+  prestadorId: z.string().min(1, "Selecione o prestador"),
+  titulo: z.string().min(2, "Informe o título do contrato"),
+  valor: z.coerce.number().positive().optional(),
+  dataAssin: z.coerce.date().optional(),
+});
+
+export type ContratoPrestadorInput = z.input<typeof contratoPrestadorSchema>;
+export type ContratoPrestadorOutput = z.output<typeof contratoPrestadorSchema>;
+
+export const movimentoFinanceiroSchema = z.object({
+  tipo: z.enum(["ENTRADA", "SAIDA"]),
+  descricao: z.string().min(2, "Informe a descrição do movimento"),
+  valor: z.coerce.number().positive("O valor deve ser maior que zero"),
+  data: z.coerce.date(),
+  categoria: z.string().optional().or(z.literal("")),
+  obraId: z.string().optional().or(z.literal("")),
+  prestadorId: z.string().optional().or(z.literal("")),
+});
+
+export type MovimentoFinanceiroInput = z.input<typeof movimentoFinanceiroSchema>;
+export type MovimentoFinanceiroOutput = z.output<typeof movimentoFinanceiroSchema>;
+
+export const configuracaoEmailSchema = z.object({
+  host: z.string().min(1, "Informe o host IMAP"),
+  porta: z.coerce.number().int().positive().default(993),
+  usuario: z.string().min(1, "Informe o usuário/e-mail"),
+  senha: z.string().min(1, "Informe a senha").optional().or(z.literal("")),
+  usarSsl: z.boolean().default(true),
+  ativo: z.boolean().default(false),
+});
+
+export type ConfiguracaoEmailInput = z.input<typeof configuracaoEmailSchema>;
+export type ConfiguracaoEmailOutput = z.output<typeof configuracaoEmailSchema>;
 
 export const usuarioUpdateSchema = z.object({
   role: z.enum(["ADMIN", "GESTOR", "ENGENHEIRO", "VIEWER"]).optional(),

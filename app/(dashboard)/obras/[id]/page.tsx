@@ -10,9 +10,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ObraStatusSelect } from "@/components/obras/ObraStatusSelect";
 import { GastoModal } from "@/components/obras/GastoModal";
 import { GastosChart } from "@/components/obras/GastosChart";
+import { PrevisaoRefreshButton } from "@/components/obras/PrevisaoRefreshButton";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { agruparGastosPorSemana } from "@/lib/gastos";
 import { formatBRL, formatDateBR } from "@/lib/utils";
 import { GASTO_CATEGORIA_LABELS as CATEGORIA_LABELS } from "@/lib/obra";
+import { calcularRiscoObra, RISCO_LABELS, RISCO_VARIANT } from "@/lib/ia/risco";
 
 interface ObraDetailPageProps {
   params: Promise<{ id: string }>;
@@ -23,7 +26,7 @@ export default async function ObraDetailPage({ params }: ObraDetailPageProps) {
 
   const obra = await prisma.obra.findUnique({
     where: { id },
-    include: { cliente: true, gastos: { orderBy: { data: "desc" } } },
+    include: { cliente: true, gastos: { orderBy: { data: "desc" } }, pagamentos: true },
   });
 
   if (!obra) notFound();
@@ -34,6 +37,15 @@ export default async function ObraDetailPage({ params }: ObraDetailPageProps) {
   const gastosSemanais = agruparGastosPorSemana(
     obra.gastos.map((g) => ({ data: g.data, valor: Number(g.valor) }))
   );
+
+  const risco = calcularRiscoObra({
+    status: obra.status,
+    progresso,
+    dataTermino: obra.dataTermino,
+    valorContrato: Number(obra.valorContrato),
+    previsaoCusto: obra.previsaoCusto ? Number(obra.previsaoCusto) : null,
+    pagamentos: obra.pagamentos.map((p) => ({ status: p.status, dataVencimento: p.dataVencimento })),
+  });
 
   return (
     <div>
@@ -97,6 +109,54 @@ export default async function ObraDetailPage({ params }: ObraDetailPageProps) {
           </dl>
         </SectionCard>
       </div>
+
+      <SectionCard
+        title="Análise de Risco (IA)"
+        description="Semáforo de risco e previsão de custo geradas automaticamente"
+        action={obra.status === "EM_ANDAMENTO" ? <PrevisaoRefreshButton obraId={obra.id} /> : undefined}
+        className="mt-6"
+      >
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div>
+            <p className="mb-1.5 text-xs font-medium text-text-secondary">Semáforo de Risco</p>
+            <StatusBadge variant={RISCO_VARIANT[risco.nivel]}>{RISCO_LABELS[risco.nivel]}</StatusBadge>
+            {risco.motivos.length > 0 && (
+              <ul className="mt-2 list-inside list-disc space-y-0.5 text-xs text-text-secondary">
+                {risco.motivos.map((motivo) => (
+                  <li key={motivo}>{motivo}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div>
+            <p className="mb-1.5 text-xs font-medium text-text-secondary">Previsão de Custo Final</p>
+            {obra.previsaoCusto ? (
+              <>
+                <p
+                  className={`text-lg font-bold ${
+                    Number(obra.previsaoCusto) > Number(obra.valorContrato) ? "text-danger" : "text-success"
+                  }`}
+                >
+                  {formatBRL(Number(obra.previsaoCusto))}
+                </p>
+                <p className="mt-1 text-xs text-text-secondary">{obra.previsaoJustificativa}</p>
+                {obra.previsaoAtualizadaEm && (
+                  <p className="mt-1 text-[11px] text-text-muted">
+                    Atualizado em {formatDateBR(obra.previsaoAtualizadaEm)}
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-text-muted">
+                {obra.status === "EM_ANDAMENTO"
+                  ? "Ainda não calculada. Clique em Atualizar Previsão."
+                  : "Disponível apenas para obras em andamento."}
+              </p>
+            )}
+          </div>
+        </div>
+      </SectionCard>
 
       <SectionCard title="Gastos Recentes" className="mt-6">
         {obra.gastos.length === 0 ? (

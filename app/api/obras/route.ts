@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { obraSchema } from "@/lib/validations";
+import { verificarAlertasObra } from "@/lib/alertas";
 import type { ObraStatus } from "@/types";
 
 export async function GET(request: NextRequest) {
@@ -38,6 +39,8 @@ export async function POST(request: NextRequest) {
       cliente: clienteId ? { connect: { id: clienteId } } : undefined,
     },
   });
+
+  await verificarAlertasObra(obra.id);
 
   return NextResponse.json(obra, { status: 201 });
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { baixaEstoqueSchema } from "@/lib/validations";
+import { verificarAlertasObra } from "@/lib/alertas";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -27,6 +28,8 @@ export async function POST(request: NextRequest) {
     where: { id: obraInventarioId },
     data: { qtdUsada: registro.qtdUsada + qtdUsada },
   });
+
+  await verificarAlertasObra(registro.obraId);
 
   return NextResponse.json(atualizado);
 }

@@ -4,20 +4,39 @@ import { KpiCard } from "@/components/shared/KpiCard";
 import { SectionCard } from "@/components/shared/SectionCard";
 import { ProgressBar } from "@/components/shared/ProgressBar";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { prisma } from "@/lib/prisma";
+import { getObraSaude } from "@/lib/obra";
+import { ALERTA_TIPO_VARIANT } from "@/lib/alertas";
 import { formatBRL, corProgresso } from "@/lib/utils";
-import { MOCK_OBRAS, MOCK_ALERTAS_RECENTES } from "@/lib/mock-data";
 
-const STATUS_LABEL = {
-  success: "No prazo",
-  warning: "Atenção",
-  danger: "Crítico",
-} as const;
+export const dynamic = "force-dynamic";
 
-export default function DashboardPage() {
-  const portfolioTotal = MOCK_OBRAS.reduce((acc, o) => acc + o.valorContrato, 0);
-  const gastoTotal = MOCK_OBRAS.reduce((acc, o) => acc + o.gastoTotal, 0);
+export default async function DashboardPage() {
+  const obras = await prisma.obra.findMany({
+    where: { status: { notIn: ["CANCELADA"] } },
+    include: { cliente: true, gastos: { select: { valor: true } } },
+    orderBy: { createdAt: "desc" },
+    take: 8,
+  });
+
+  const alertasRecentes = await prisma.alerta.findMany({
+    where: { lido: false },
+    include: { obra: { select: { nome: true } } },
+    orderBy: { createdAt: "desc" },
+    take: 6,
+  });
+
+  const totalAlertas = await prisma.alerta.count({ where: { lido: false } });
+
+  const obrasComTotais = obras.map((obra) => ({
+    ...obra,
+    gastoTotal: obra.gastos.reduce((acc, g) => acc + Number(g.valor), 0),
+  }));
+
+  const portfolioTotal = obrasComTotais.reduce((acc, o) => acc + Number(o.valorContrato), 0);
+  const gastoTotal = obrasComTotais.reduce((acc, o) => acc + o.gastoTotal, 0);
   const saldoGeral = portfolioTotal - gastoTotal;
-  const obrasAtivas = MOCK_OBRAS.length;
+  const obrasAtivas = obrasComTotais.filter((o) => o.status === "EM_ANDAMENTO").length;
 
   return (
     <div>
@@ -33,48 +52,66 @@ export default function DashboardPage() {
           valueClassName={saldoGeral >= 0 ? "text-success" : "text-danger"}
         />
         <KpiCard label="Obras Ativas" value={String(obrasAtivas)} icon={Building2} />
-        <KpiCard label="Alertas" value={String(MOCK_ALERTAS_RECENTES.length)} icon={Bell} />
+        <KpiCard label="Alertas" value={String(totalAlertas)} icon={Bell} />
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <SectionCard title="Progresso das Obras" description="Andamento financeiro em relação ao contrato" className="lg:col-span-2">
-          <div className="space-y-4">
-            {MOCK_OBRAS.map((obra) => {
-              const cor = corProgresso(obra.progresso);
-              return (
-                <div key={obra.id} className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-text-primary">{obra.nome}</p>
-                      <p className="text-xs text-text-secondary">{obra.cliente}</p>
+          {obrasComTotais.length === 0 ? (
+            <p className="py-6 text-center text-sm text-text-muted">Nenhuma obra cadastrada ainda.</p>
+          ) : (
+            <div className="space-y-4">
+              {obrasComTotais.map((obra) => {
+                const cor = corProgresso(Number(obra.progresso));
+                const saude = getObraSaude({
+                  progresso: Number(obra.progresso),
+                  dataTermino: obra.dataTermino,
+                  status: obra.status,
+                });
+                return (
+                  <div key={obra.id} className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-text-primary">{obra.nome}</p>
+                        <p className="text-xs text-text-secondary">{obra.cliente?.nome ?? "Sem cliente"}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-text-secondary">
+                          {formatBRL(obra.gastoTotal)} / {formatBRL(Number(obra.valorContrato))}
+                        </span>
+                        <StatusBadge variant={saude.variant === "neutral" ? "neutral" : cor}>{saude.label}</StatusBadge>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-text-secondary">{formatBRL(obra.gastoTotal)} / {formatBRL(obra.valorContrato)}</span>
-                      <StatusBadge variant={cor}>{STATUS_LABEL[cor]}</StatusBadge>
-                    </div>
+                    <ProgressBar value={Number(obra.progresso)} showLabel />
                   </div>
-                  <ProgressBar value={obra.progresso} showLabel />
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </SectionCard>
 
         <SectionCard title="Alertas Recentes" description="Gerados automaticamente pela IA">
-          <div className="space-y-3">
-            {MOCK_ALERTAS_RECENTES.map((alerta) => (
-              <div key={alerta.id} className="flex items-start gap-2.5 border-b border-border pb-3 last:border-0 last:pb-0">
-                <span
-                  className="mt-1 size-1.5 shrink-0 rounded-full"
-                  style={{ backgroundColor: alerta.tipo === "danger" ? "var(--danger)" : "var(--warning)" }}
-                />
-                <div>
-                  <p className="text-sm font-medium text-text-primary">{alerta.titulo}</p>
-                  <p className="text-xs text-text-secondary">{alerta.obra}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+          {alertasRecentes.length === 0 ? (
+            <p className="py-6 text-center text-sm text-text-muted">Nenhum alerta pendente.</p>
+          ) : (
+            <div className="space-y-3">
+              {alertasRecentes.map((alerta) => {
+                const variant = ALERTA_TIPO_VARIANT[alerta.tipo];
+                return (
+                  <div key={alerta.id} className="flex items-start gap-2.5 border-b border-border pb-3 last:border-0 last:pb-0">
+                    <span
+                      className="mt-1 size-1.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: `var(--${variant})` }}
+                    />
+                    <div>
+                      <p className="text-sm font-medium text-text-primary">{alerta.titulo}</p>
+                      <p className="text-xs text-text-secondary">{alerta.obra?.nome ?? "Geral"}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </SectionCard>
       </div>
     </div>

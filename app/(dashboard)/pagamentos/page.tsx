@@ -29,16 +29,17 @@ export default async function PagamentosPage({ searchParams }: PagamentosPagePro
   const fimSemana = new Date(inicioSemana);
   fimSemana.setDate(inicioSemana.getDate() + 7);
 
-  const [pagamentosSemana, obras] = await Promise.all([
+  const [pagamentosSemana, obras, prestadores] = await Promise.all([
     prisma.pagamento.findMany({
       where: {
         dataVencimento: { gte: inicioSemana, lt: fimSemana },
         ...(obraId ? { obraId } : {}),
       },
-      include: { obra: { select: { nome: true } } },
+      include: { obra: { select: { nome: true } }, prestador: { select: { nome: true } } },
       orderBy: { dataVencimento: "asc" },
     }),
     prisma.obra.findMany({ select: { id: true, nome: true }, orderBy: { nome: "asc" } }),
+    prisma.prestador.findMany({ select: { id: true, nome: true }, orderBy: { nome: "asc" } }),
   ]);
 
   const linhas = pagamentosSemana.map((p) => ({
@@ -55,7 +56,7 @@ export default async function PagamentosPage({ searchParams }: PagamentosPagePro
     <div>
       <PageHeader
         title="Pagamentos"
-        actions={<PagamentoModal obras={obras} />}
+        actions={<PagamentoModal obras={obras} prestadores={prestadores} />}
       />
 
       <div className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -86,6 +87,7 @@ export default async function PagamentosPage({ searchParams }: PagamentosPagePro
               <TableRow>
                 <TableHead>Descrição</TableHead>
                 <TableHead>Obra</TableHead>
+                <TableHead>Prestador</TableHead>
                 <TableHead>Vencimento</TableHead>
                 <TableHead className="text-right">Valor</TableHead>
                 <TableHead>Status</TableHead>
@@ -97,6 +99,7 @@ export default async function PagamentosPage({ searchParams }: PagamentosPagePro
                 <TableRow key={pagamento.id}>
                   <TableCell>{pagamento.descricao}</TableCell>
                   <TableCell className="text-text-secondary">{pagamento.obra.nome}</TableCell>
+                  <TableCell className="text-text-secondary">{pagamento.prestador?.nome ?? "—"}</TableCell>
                   <TableCell className="text-text-secondary">{formatDateBR(pagamento.dataVencimento)}</TableCell>
                   <TableCell className="text-right font-medium">{formatBRL(Number(pagamento.valor))}</TableCell>
                   <TableCell>

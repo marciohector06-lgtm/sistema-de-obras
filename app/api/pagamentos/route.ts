@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const pagamento = await prisma.pagamento.create({ data: parsed.data });
+  const { prestadorId, ...rest } = parsed.data;
+  const pagamento = await prisma.pagamento.create({ data: { ...rest, prestadorId: prestadorId || null } });
   return NextResponse.json(pagamento, { status: 201 });
 }

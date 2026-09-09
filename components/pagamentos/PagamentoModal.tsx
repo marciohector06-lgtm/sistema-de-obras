@@ -27,10 +27,11 @@ import { pagamentoSchema, type PagamentoInput, type PagamentoOutput } from "@/li
 
 interface PagamentoModalProps {
   obras: { id: string; nome: string }[];
+  prestadores: { id: string; nome: string }[];
 }
 
 // Modal para cadastrar um novo pagamento (agendado para uma data de vencimento)
-export function PagamentoModal({ obras }: PagamentoModalProps) {
+export function PagamentoModal({ obras, prestadores }: PagamentoModalProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
@@ -42,7 +43,7 @@ export function PagamentoModal({ obras }: PagamentoModalProps) {
     formState: { errors, isSubmitting },
   } = useForm<PagamentoInput, unknown, PagamentoOutput>({
     resolver: zodResolver(pagamentoSchema),
-    defaultValues: { obraId: "", descricao: "", dataVencimento: new Date() },
+    defaultValues: { obraId: "", prestadorId: "", descricao: "", dataVencimento: new Date() },
   });
 
   async function onSubmit(data: PagamentoOutput) {
@@ -59,7 +60,7 @@ export function PagamentoModal({ obras }: PagamentoModalProps) {
 
     toast.success("Pagamento cadastrado");
     setOpen(false);
-    reset({ obraId: "", descricao: "", dataVencimento: new Date(), valor: undefined });
+    reset({ obraId: "", prestadorId: "", descricao: "", dataVencimento: new Date(), valor: undefined });
     router.refresh();
   }
 
@@ -96,6 +97,30 @@ export function PagamentoModal({ obras }: PagamentoModalProps) {
               )}
             />
             {errors.obraId && <p className="text-xs text-danger">{errors.obraId.message}</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Prestador (opcional)</Label>
+            <Controller
+              control={control}
+              name="prestadorId"
+              render={({ field }) => (
+                <Select value={field.value || undefined} onValueChange={field.onChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Nenhum">
+                      {(v: string) => (v ? prestadores.find((p) => p.id === v)?.nome : "Nenhum")}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {prestadores.map((prestador) => (
+                      <SelectItem key={prestador.id} value={prestador.id}>
+                        {prestador.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
           </div>
 
           <div className="space-y-1.5">

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { obraSchema } from "@/lib/validations";
+import { verificarAlertasObra } from "@/lib/alertas";
 
 interface Params {
   params: Promise<{ id: string }>;
@@ -40,6 +41,8 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       ...(clienteId !== undefined ? { cliente: clienteId ? { connect: { id: clienteId } } : { disconnect: true } } : {}),
     },
   });
+
+  await verificarAlertasObra(obra.id);
 
   return NextResponse.json(obra);
 }

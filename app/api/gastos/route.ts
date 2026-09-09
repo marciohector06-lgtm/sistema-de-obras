@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { gastoSchema } from "@/lib/validations";
 import { calcProgresso } from "@/lib/utils";
+import { verificarAlertasObra } from "@/lib/alertas";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
@@ -31,6 +32,8 @@ export async function POST(request: NextRequest) {
 
     return [novoGasto];
   });
+
+  await verificarAlertasObra(obraId);
 
   return NextResponse.json(gasto, { status: 201 });
 }
