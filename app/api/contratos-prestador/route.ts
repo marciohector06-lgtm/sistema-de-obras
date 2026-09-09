@@ -1,8 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { contratoPrestadorSchema } from "@/lib/validations";
+import { protegido } from "@/lib/api-handler";
+import { sanitizarObjeto } from "@/lib/sanitize";
 
-export async function GET(request: NextRequest) {
+export const GET = protegido(async (request) => {
   const { searchParams } = new URL(request.url);
   const prestadorId = searchParams.get("prestadorId");
 
@@ -13,17 +15,20 @@ export async function GET(request: NextRequest) {
   });
 
   return NextResponse.json(contratos);
-}
+});
 
-export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const parsed = contratoPrestadorSchema.safeParse(body);
+export const POST = protegido(
+  async (request) => {
+    const body = await request.json();
+    const parsed = contratoPrestadorSchema.safeParse(body);
 
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
-  }
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    }
 
-  const contrato = await prisma.contratoPrestador.create({ data: parsed.data });
+    const contrato = await prisma.contratoPrestador.create({ data: sanitizarObjeto(parsed.data) });
 
-  return NextResponse.json(contrato, { status: 201 });
-}
+    return NextResponse.json(contrato, { status: 201 });
+  },
+  { nivel: "escrita" }
+);

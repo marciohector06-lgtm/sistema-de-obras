@@ -38,6 +38,11 @@ export async function middleware(request: NextRequest) {
   const isPublicRoute = PUBLIC_ROUTES.some((route) =>
     request.nextUrl.pathname.startsWith(route)
   );
+  const isApiRoute = request.nextUrl.pathname.startsWith("/api/");
+
+  if (!user && isApiRoute) {
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+  }
 
   // Redireciona para login se não autenticado e tentando acessar rota protegida
   if (!user && !isPublicRoute) {

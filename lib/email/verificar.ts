@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { descriptografar } from "@/lib/crypto";
 import { importarMateriaisDaNFe } from "@/lib/email/nfe";
 import { extrairPixInter, importarPixComoMovimento } from "@/lib/email/pix-inter";
+import { validarXmlNFe } from "@/lib/upload-validation";
 import { formatBRL } from "@/lib/utils";
 import type { ImportacaoEmailTipo } from "@/types";
 
@@ -61,9 +62,15 @@ export async function executarVerificacaoEmail(): Promise<ResultadoVerificacao> 
           );
 
           if (anexoXml) {
-            const quantidade = await importarMateriaisDaNFe(anexoXml.content.toString("utf-8"));
-            await registrarLog("NFE", "SUCESSO", `${quantidade} item(ns) de material importado(s) de "${assunto}"`, quantidade);
-            processadas += quantidade;
+            const validacao = validarXmlNFe(anexoXml.content.length, anexoXml.contentType);
+            if (!validacao.valido) {
+              erros.push(validacao.erro!);
+              await registrarLog("NFE", "ERRO", `Anexo de "${assunto}" rejeitado: ${validacao.erro}`);
+            } else {
+              const quantidade = await importarMateriaisDaNFe(anexoXml.content.toString("utf-8"));
+              await registrarLog("NFE", "SUCESSO", `${quantidade} item(ns) de material importado(s) de "${assunto}"`, quantidade);
+              processadas += quantidade;
+            }
           } else if (
             (parsed.from?.text ?? "").toLowerCase().includes("bancointer") ||
             assunto.toLowerCase().includes("pix")

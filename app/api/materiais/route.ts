@@ -1,8 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { materialSchema } from "@/lib/validations";
+import { protegido } from "@/lib/api-handler";
+import { sanitizarObjeto } from "@/lib/sanitize";
 
-export async function GET(request: NextRequest) {
+export const GET = protegido(async (request) => {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q");
 
@@ -12,17 +14,20 @@ export async function GET(request: NextRequest) {
   });
 
   return NextResponse.json(materiais);
-}
+});
 
-export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const parsed = materialSchema.safeParse(body);
+export const POST = protegido(
+  async (request) => {
+    const body = await request.json();
+    const parsed = materialSchema.safeParse(body);
 
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
-  }
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    }
 
-  const material = await prisma.material.create({ data: parsed.data });
+    const material = await prisma.material.create({ data: sanitizarObjeto(parsed.data) });
 
-  return NextResponse.json(material, { status: 201 });
-}
+    return NextResponse.json(material, { status: 201 });
+  },
+  { nivel: "escrita" }
+);

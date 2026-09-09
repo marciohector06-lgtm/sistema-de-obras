@@ -1,8 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { entradaSchema } from "@/lib/validations";
+import { protegido } from "@/lib/api-handler";
+import { sanitizarObjeto } from "@/lib/sanitize";
 
-export async function GET(request: NextRequest) {
+export const GET = protegido(async (request) => {
   const { searchParams } = new URL(request.url);
   const obraId = searchParams.get("obraId");
 
@@ -13,16 +15,19 @@ export async function GET(request: NextRequest) {
   });
 
   return NextResponse.json(entradas);
-}
+});
 
-export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const parsed = entradaSchema.safeParse(body);
+export const POST = protegido(
+  async (request) => {
+    const body = await request.json();
+    const parsed = entradaSchema.safeParse(body);
 
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
-  }
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    }
 
-  const entrada = await prisma.entrada.create({ data: parsed.data });
-  return NextResponse.json(entrada, { status: 201 });
-}
+    const entrada = await prisma.entrada.create({ data: sanitizarObjeto(parsed.data) });
+    return NextResponse.json(entrada, { status: 201 });
+  },
+  { nivel: "escrita" }
+);

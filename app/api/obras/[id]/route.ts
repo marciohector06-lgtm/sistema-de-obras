@@ -1,14 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { obraSchema } from "@/lib/validations";
 import { verificarAlertasObra } from "@/lib/alertas";
+import { protegido } from "@/lib/api-handler";
+import { sanitizarObjeto } from "@/lib/sanitize";
+import { registrarAuditoria } from "@/lib/audit";
 
-interface Params {
-  params: Promise<{ id: string }>;
-}
-
-export async function GET(_request: NextRequest, { params }: Params) {
-  const { id } = await params;
+export const GET = protegido(async (_request, contexto) => {
+  const { id } = await contexto.params;
 
   const obra = await prisma.obra.findUnique({
     where: { id },
@@ -21,34 +20,53 @@ export async function GET(_request: NextRequest, { params }: Params) {
   if (!obra) return NextResponse.json({ error: "Obra não encontrada" }, { status: 404 });
 
   return NextResponse.json(obra);
-}
+});
 
-export async function PATCH(request: NextRequest, { params }: Params) {
-  const { id } = await params;
-  const body = await request.json();
-  const parsed = obraSchema.partial().safeParse(body);
+export const PATCH = protegido(
+  async (request, contexto) => {
+    const { id } = await contexto.params;
+    const body = await request.json();
+    const parsed = obraSchema.partial().safeParse(body);
 
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
-  }
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    }
 
-  const { clienteId, ...rest } = parsed.data;
+    const { clienteId, ...rest } = sanitizarObjeto(parsed.data);
 
-  const obra = await prisma.obra.update({
-    where: { id },
-    data: {
-      ...rest,
-      ...(clienteId !== undefined ? { cliente: clienteId ? { connect: { id: clienteId } } : { disconnect: true } } : {}),
-    },
-  });
+    const obra = await prisma.obra.update({
+      where: { id },
+      data: {
+        ...rest,
+        ...(clienteId !== undefined ? { cliente: clienteId ? { connect: { id: clienteId } } : { disconnect: true } } : {}),
+      },
+    });
 
-  await verificarAlertasObra(obra.id);
+    await verificarAlertasObra(obra.id);
 
-  return NextResponse.json(obra);
-}
+    return NextResponse.json(obra);
+  },
+  { nivel: "escrita" }
+);
 
-export async function DELETE(_request: NextRequest, { params }: Params) {
-  const { id } = await params;
-  await prisma.obra.delete({ where: { id } });
-  return NextResponse.json({ ok: true });
-}
+export const DELETE = protegido(
+  async (_request, contexto, usuario) => {
+    const { id } = await contexto.params;
+
+    const obra = await prisma.obra.findUnique({ where: { id }, select: { nome: true } });
+    if (!obra) return NextResponse.json({ error: "Obra não encontrada" }, { status: 404 });
+
+    await prisma.obra.delete({ where: { id } });
+
+    await registrarAuditoria({
+      acao: "obra.deletar",
+      entidade: "Obra",
+      entidadeId: id,
+      usuario,
+      detalhes: { nome: obra.nome },
+    });
+
+    return NextResponse.json({ ok: true });
+  },
+  { nivel: "admin" }
+);

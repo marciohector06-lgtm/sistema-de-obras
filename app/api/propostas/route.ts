@@ -1,9 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { propostaSchema } from "@/lib/validations";
+import { protegido } from "@/lib/api-handler";
+import { sanitizarObjeto } from "@/lib/sanitize";
 import type { PropostaStatus } from "@/types";
 
-export async function GET(request: NextRequest) {
+export const GET = protegido(async (request) => {
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status") as PropostaStatus | null;
   const clienteId = searchParams.get("clienteId");
@@ -23,49 +25,52 @@ export async function GET(request: NextRequest) {
   });
 
   return NextResponse.json(propostas);
-}
+});
 
-export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const parsed = propostaSchema.safeParse(body);
+export const POST = protegido(
+  async (request) => {
+    const body = await request.json();
+    const parsed = propostaSchema.safeParse(body);
 
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
-  }
-
-  const { secoes, ...rest } = parsed.data;
-
-  const proposta = await prisma.$transaction(async (tx) => {
-    const nova = await tx.proposta.create({ data: rest });
-
-    for (let secaoIndex = 0; secaoIndex < secoes.length; secaoIndex++) {
-      const secao = secoes[secaoIndex];
-      const novaSecao = await tx.propostaSecao.create({
-        data: { propostaId: nova.id, titulo: secao.titulo, ordem: secaoIndex },
-      });
-
-      for (let itemIndex = 0; itemIndex < secao.itens.length; itemIndex++) {
-        const item = secao.itens[itemIndex];
-        await tx.propostaItem.create({
-          data: {
-            secaoId: novaSecao.id,
-            materialId: item.materialId || undefined,
-            descricao: item.descricao,
-            unidade: item.unidade,
-            quantidade: item.quantidade,
-            precoUnitario: item.precoUnitario,
-            ordem: itemIndex,
-          },
-        });
-      }
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
     }
 
-    await tx.propostaEvento.create({
-      data: { propostaId: nova.id, tipo: "CRIADA", mensagem: `Proposta #${nova.numero} criada.` },
+    const { secoes, ...rest } = sanitizarObjeto(parsed.data);
+
+    const proposta = await prisma.$transaction(async (tx) => {
+      const nova = await tx.proposta.create({ data: rest });
+
+      for (let secaoIndex = 0; secaoIndex < secoes.length; secaoIndex++) {
+        const secao = secoes[secaoIndex];
+        const novaSecao = await tx.propostaSecao.create({
+          data: { propostaId: nova.id, titulo: secao.titulo, ordem: secaoIndex },
+        });
+
+        for (let itemIndex = 0; itemIndex < secao.itens.length; itemIndex++) {
+          const item = secao.itens[itemIndex];
+          await tx.propostaItem.create({
+            data: {
+              secaoId: novaSecao.id,
+              materialId: item.materialId || undefined,
+              descricao: item.descricao,
+              unidade: item.unidade,
+              quantidade: item.quantidade,
+              precoUnitario: item.precoUnitario,
+              ordem: itemIndex,
+            },
+          });
+        }
+      }
+
+      await tx.propostaEvento.create({
+        data: { propostaId: nova.id, tipo: "CRIADA", mensagem: `Proposta #${nova.numero} criada.` },
+      });
+
+      return nova;
     });
 
-    return nova;
-  });
-
-  return NextResponse.json(proposta, { status: 201 });
-}
+    return NextResponse.json(proposta, { status: 201 });
+  },
+  { nivel: "escrita" }
+);

@@ -1,22 +1,22 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { atualizarPrevisaoObra } from "@/lib/alertas";
+import { protegido } from "@/lib/api-handler";
 
-interface Params {
-  params: Promise<{ id: string }>;
-}
+export const POST = protegido(
+  async (_request, contexto) => {
+    const { id } = await contexto.params;
 
-export async function POST(_request: NextRequest, { params }: Params) {
-  const { id } = await params;
+    await atualizarPrevisaoObra(id, { forcar: true });
 
-  await atualizarPrevisaoObra(id, { forcar: true });
+    const obra = await prisma.obra.findUnique({
+      where: { id },
+      select: { previsaoCusto: true, previsaoJustificativa: true, previsaoAtualizadaEm: true },
+    });
 
-  const obra = await prisma.obra.findUnique({
-    where: { id },
-    select: { previsaoCusto: true, previsaoJustificativa: true, previsaoAtualizadaEm: true },
-  });
+    if (!obra) return NextResponse.json({ error: "Obra não encontrada" }, { status: 404 });
 
-  if (!obra) return NextResponse.json({ error: "Obra não encontrada" }, { status: 404 });
-
-  return NextResponse.json(obra);
-}
+    return NextResponse.json(obra);
+  },
+  { nivel: "escrita", rateLimit: { limite: 10, janelaMs: 60_000 } }
+);

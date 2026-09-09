@@ -105,7 +105,7 @@ enum Prioridade {
 model Gasto {
   id          String         @id @default(cuid())
   obraId      String
-  obra        Obra           @relation(fields: [obraId], references: [id])
+  obra        Obra           @relation(fields: [obraId], references: [id], onDelete: Cascade)
   userId      String?
   user        User?          @relation(fields: [userId], references: [id])
   descricao   String
@@ -130,7 +130,7 @@ enum GastoCategoria {
 model Entrada {
   id          String   @id @default(cuid())
   obraId      String
-  obra        Obra     @relation(fields: [obraId], references: [id])
+  obra        Obra     @relation(fields: [obraId], references: [id], onDelete: Cascade)
   descricao   String
   valor       Decimal  @db.Decimal(12, 2)
   data        DateTime
@@ -155,7 +155,7 @@ model ItemInventario {
 model ObraInventario {
   id          String         @id @default(cuid())
   obraId      String
-  obra        Obra           @relation(fields: [obraId], references: [id])
+  obra        Obra           @relation(fields: [obraId], references: [id], onDelete: Cascade)
   itemId      String
   item        ItemInventario @relation(fields: [itemId], references: [id])
   qtdComprada Int
@@ -170,7 +170,7 @@ model ObraInventario {
 model Pagamento {
   id             String          @id @default(cuid())
   obraId         String
-  obra           Obra            @relation(fields: [obraId], references: [id])
+  obra           Obra            @relation(fields: [obraId], references: [id], onDelete: Cascade)
   userId         String?
   user           User?           @relation(fields: [userId], references: [id])
   prestadorId    String?
@@ -197,7 +197,7 @@ enum PagamentoStatus {
 model Contrato {
   id        String    @id @default(cuid())
   obraId    String
-  obra      Obra      @relation(fields: [obraId], references: [id])
+  obra      Obra      @relation(fields: [obraId], references: [id], onDelete: Cascade)
   titulo    String
   arquivo   String?
   valor     Decimal?  @db.Decimal(12, 2)
@@ -209,7 +209,7 @@ model Contrato {
 model Alerta {
   id        String     @id @default(cuid())
   obraId    String?
-  obra      Obra?      @relation(fields: [obraId], references: [id])
+  obra      Obra?      @relation(fields: [obraId], references: [id], onDelete: Cascade)
   tipo      AlertaTipo
   titulo    String
   mensagem  String
@@ -343,7 +343,7 @@ model MovimentoFinanceiro {
   data        DateTime
   categoria   String?
   obraId      String?
-  obra        Obra?         @relation(fields: [obraId], references: [id])
+  obra        Obra?         @relation(fields: [obraId], references: [id], onDelete: SetNull)
   prestadorId String?
   prestador   Prestador?    @relation(fields: [prestadorId], references: [id])
   createdAt   DateTime      @default(now())
@@ -386,4 +386,19 @@ enum ImportacaoEmailTipo {
 enum ImportacaoEmailStatus {
   SUCESSO
   ERRO
+}
+
+// ===== AUDITORIA =====
+model AuditLog {
+  id         String   @id @default(cuid())
+  acao       String
+  entidade   String
+  entidadeId String
+  userId     String?
+  userEmail  String?
+  detalhes   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entidade, entidadeId])
+  @@index([userId])
 }

@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { protegido } from "@/lib/api-handler";
 import type { AlertaTipo } from "@/types";
 
-export async function GET(request: NextRequest) {
+export const GET = protegido(async (request) => {
   const { searchParams } = new URL(request.url);
   const lido = searchParams.get("lido");
   const tipo = searchParams.get("tipo") as AlertaTipo | null;
@@ -19,4 +20,4 @@ export async function GET(request: NextRequest) {
   });
 
   return NextResponse.json(alertas);
-}
+});

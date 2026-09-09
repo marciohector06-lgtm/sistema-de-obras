@@ -1,9 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { movimentoFinanceiroSchema } from "@/lib/validations";
+import { protegido } from "@/lib/api-handler";
+import { sanitizarObjeto } from "@/lib/sanitize";
 import type { MovimentoTipo } from "@/types";
 
-export async function GET(request: NextRequest) {
+export const GET = protegido(async (request) => {
   const { searchParams } = new URL(request.url);
   const tipo = searchParams.get("tipo") as MovimentoTipo | null;
   const obraId = searchParams.get("obraId");
@@ -23,21 +25,24 @@ export async function GET(request: NextRequest) {
   });
 
   return NextResponse.json(movimentos);
-}
+});
 
-export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const parsed = movimentoFinanceiroSchema.safeParse(body);
+export const POST = protegido(
+  async (request) => {
+    const body = await request.json();
+    const parsed = movimentoFinanceiroSchema.safeParse(body);
 
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
-  }
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    }
 
-  const { obraId, prestadorId, ...rest } = parsed.data;
+    const { obraId, prestadorId, ...rest } = sanitizarObjeto(parsed.data);
 
-  const movimento = await prisma.movimentoFinanceiro.create({
-    data: { ...rest, obraId: obraId || null, prestadorId: prestadorId || null },
-  });
+    const movimento = await prisma.movimentoFinanceiro.create({
+      data: { ...rest, obraId: obraId || null, prestadorId: prestadorId || null },
+    });
 
-  return NextResponse.json(movimento, { status: 201 });
-}
+    return NextResponse.json(movimento, { status: 201 });
+  },
+  { nivel: "escrita" }
+);

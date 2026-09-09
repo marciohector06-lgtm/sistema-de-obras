@@ -1,27 +1,31 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { prestadorSchema } from "@/lib/validations";
+import { protegido } from "@/lib/api-handler";
+import { sanitizarObjeto } from "@/lib/sanitize";
 
-interface Params {
-  params: Promise<{ id: string }>;
-}
+export const PATCH = protegido(
+  async (request, contexto) => {
+    const { id } = await contexto.params;
+    const body = await request.json();
+    const parsed = prestadorSchema.partial().safeParse(body);
 
-export async function PATCH(request: NextRequest, { params }: Params) {
-  const { id } = await params;
-  const body = await request.json();
-  const parsed = prestadorSchema.partial().safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    }
 
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
-  }
+    const prestador = await prisma.prestador.update({ where: { id }, data: sanitizarObjeto(parsed.data) });
 
-  const prestador = await prisma.prestador.update({ where: { id }, data: parsed.data });
+    return NextResponse.json(prestador);
+  },
+  { nivel: "escrita" }
+);
 
-  return NextResponse.json(prestador);
-}
-
-export async function DELETE(_request: NextRequest, { params }: Params) {
-  const { id } = await params;
-  await prisma.prestador.delete({ where: { id } });
-  return NextResponse.json({ ok: true });
-}
+export const DELETE = protegido(
+  async (_request, contexto) => {
+    const { id } = await contexto.params;
+    await prisma.prestador.delete({ where: { id } });
+    return NextResponse.json({ ok: true });
+  },
+  { nivel: "escrita" }
+);

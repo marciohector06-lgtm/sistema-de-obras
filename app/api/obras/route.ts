@@ -1,10 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { obraSchema } from "@/lib/validations";
 import { verificarAlertasObra } from "@/lib/alertas";
+import { protegido } from "@/lib/api-handler";
+import { sanitizarObjeto } from "@/lib/sanitize";
 import type { ObraStatus } from "@/types";
 
-export async function GET(request: NextRequest) {
+export const GET = protegido(async (request) => {
   const { searchParams } = new URL(request.url);
   const status = searchParams.get("status") as ObraStatus | null;
   const clienteId = searchParams.get("clienteId");
@@ -21,26 +23,29 @@ export async function GET(request: NextRequest) {
   });
 
   return NextResponse.json(obras);
-}
+});
 
-export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const parsed = obraSchema.safeParse(body);
+export const POST = protegido(
+  async (request) => {
+    const body = await request.json();
+    const parsed = obraSchema.safeParse(body);
 
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
-  }
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    }
 
-  const { clienteId, ...rest } = parsed.data;
+    const { clienteId, ...rest } = sanitizarObjeto(parsed.data);
 
-  const obra = await prisma.obra.create({
-    data: {
-      ...rest,
-      cliente: clienteId ? { connect: { id: clienteId } } : undefined,
-    },
-  });
+    const obra = await prisma.obra.create({
+      data: {
+        ...rest,
+        cliente: clienteId ? { connect: { id: clienteId } } : undefined,
+      },
+    });
 
-  await verificarAlertasObra(obra.id);
+    await verificarAlertasObra(obra.id);
 
-  return NextResponse.json(obra, { status: 201 });
-}
+    return NextResponse.json(obra, { status: 201 });
+  },
+  { nivel: "escrita" }
+);

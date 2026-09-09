@@ -1,13 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { gerarPropostaPdf } from "@/lib/pdf/proposta-pdf";
+import { protegido } from "@/lib/api-handler";
 
-interface Params {
-  params: Promise<{ id: string }>;
-}
-
-export async function GET(_request: NextRequest, { params }: Params) {
-  const { id } = await params;
+export const GET = protegido(async (_request, contexto) => {
+  const { id } = await contexto.params;
 
   const proposta = await prisma.proposta.findUnique({
     where: { id },
@@ -45,4 +42,4 @@ export async function GET(_request: NextRequest, { params }: Params) {
       "Content-Disposition": `inline; filename="proposta-${proposta.numero}.pdf"`,
     },
   });
-}
+});
