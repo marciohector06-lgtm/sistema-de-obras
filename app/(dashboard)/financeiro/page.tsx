@@ -10,7 +10,7 @@ import { CategoriaDonutChart, type CategoriaChartData } from "@/components/finan
 import { EntradaModal } from "@/components/financeiro/EntradaModal";
 import { ContratoModal } from "@/components/financeiro/ContratoModal";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { Wallet, TrendingDown, TrendingUp, PiggyBank, Building2, FileText } from "lucide-react";
+import { Wallet, TrendingDown, TrendingUp, PiggyBank, Building2, FileText, Download } from "lucide-react";
 import { formatBRL, formatDateBR } from "@/lib/utils";
 import { calcResumoFinanceiro, getPeriodoRange } from "@/lib/financeiro";
 import { agruparPorSemanaComItens } from "@/lib/gastos";
@@ -231,6 +231,7 @@ export default async function FinanceiroPage({ searchParams }: FinanceiroPagePro
                     <TableHead>Obra</TableHead>
                     <TableHead>Assinatura</TableHead>
                     <TableHead className="text-right">Valor</TableHead>
+                    <TableHead className="w-10" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -243,6 +244,13 @@ export default async function FinanceiroPage({ searchParams }: FinanceiroPagePro
                       </TableCell>
                       <TableCell className="text-right font-medium">
                         {contrato.valor ? formatBRL(Number(contrato.valor)) : "—"}
+                      </TableCell>
+                      <TableCell>
+                        {contrato.arquivo && (
+                          <a href={contrato.arquivo} target="_blank" rel="noreferrer">
+                            <Download className="size-4 text-text-secondary hover:text-text-primary" />
+                          </a>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}

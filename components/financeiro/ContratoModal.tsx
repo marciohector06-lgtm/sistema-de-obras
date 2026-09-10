@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Loader2, Info } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,15 +24,18 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { contratoSchema, type ContratoInput, type ContratoOutput } from "@/lib/validations";
+import { createClient } from "@/lib/supabase";
+import { validarPdf } from "@/lib/upload-validation";
 
 interface ContratoModalProps {
   obras: { id: string; nome: string }[];
 }
 
-// Modal para cadastrar um contrato (metadados). Upload de PDF fica pendente até o Supabase Storage ser conectado.
 export function ContratoModal({ obras }: ContratoModalProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [arquivo, setArquivo] = useState<File | null>(null);
+  const [enviandoArquivo, setEnviandoArquivo] = useState(false);
 
   const {
     register,
@@ -46,10 +49,33 @@ export function ContratoModal({ obras }: ContratoModalProps) {
   });
 
   async function onSubmit(data: ContratoOutput) {
+    let urlArquivo = "";
+
+    if (arquivo) {
+      const validacao = validarPdf(arquivo.size, arquivo.type);
+      if (!validacao.valido) {
+        toast.error(validacao.erro);
+        return;
+      }
+
+      setEnviandoArquivo(true);
+      const supabase = createClient();
+      const caminho = `${data.obraId}/${Date.now()}-${arquivo.name}`;
+      const { error: erroUpload } = await supabase.storage.from("contratos").upload(caminho, arquivo);
+      setEnviandoArquivo(false);
+
+      if (erroUpload) {
+        toast.error("Não foi possível enviar o arquivo");
+        return;
+      }
+
+      urlArquivo = supabase.storage.from("contratos").getPublicUrl(caminho).data.publicUrl;
+    }
+
     const res = await fetch("/api/contratos", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, arquivo: urlArquivo }),
     });
 
     if (!res.ok) {
@@ -59,6 +85,7 @@ export function ContratoModal({ obras }: ContratoModalProps) {
 
     toast.success("Contrato cadastrado");
     setOpen(false);
+    setArquivo(null);
     reset({ titulo: "", obraId: "", valor: undefined, dataAssin: undefined });
     router.refresh();
   }
@@ -132,15 +159,17 @@ export function ContratoModal({ obras }: ContratoModalProps) {
 
           <div className="space-y-1.5">
             <Label htmlFor="arquivo">Arquivo (PDF)</Label>
-            <Input id="arquivo" type="file" accept="application/pdf" disabled />
-            <p className="flex items-center gap-1 text-xs text-text-muted">
-              <Info className="size-3" /> Upload será habilitado quando o Supabase Storage estiver conectado
-            </p>
+            <Input
+              id="arquivo"
+              type="file"
+              accept="application/pdf"
+              onChange={(e) => setArquivo(e.target.files?.[0] ?? null)}
+            />
           </div>
 
           <DialogFooter>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="animate-spin" />}
+            <Button type="submit" disabled={isSubmitting || enviandoArquivo}>
+              {(isSubmitting || enviandoArquivo) && <Loader2 className="animate-spin" />}
               Salvar
             </Button>
           </DialogFooter>

@@ -77,6 +77,7 @@ export const contratoSchema = z.object({
   titulo: z.string().min(2, "Informe o título do contrato"),
   valor: z.coerce.number().positive().optional(),
   dataAssin: z.coerce.date().optional(),
+  arquivo: z.string().optional().or(z.literal("")),
 });
 
 export type ContratoInput = z.input<typeof contratoSchema>;
