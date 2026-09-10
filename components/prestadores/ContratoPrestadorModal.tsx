@@ -122,7 +122,7 @@ export function ContratoPrestadorModal({ prestadores }: ContratoPrestadorModalPr
                         ? new Date(field.value as string | number | Date).toISOString().slice(0, 10)
                         : ""
                     }
-                    onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : undefined)}
+                    onChange={(e) => field.onChange(e.target.value ? new Date(`${e.target.value}T00:00:00`) : undefined)}
                   />
                 )}
               />

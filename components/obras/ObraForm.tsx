@@ -175,7 +175,7 @@ export function ObraForm({ clientes, obraId, defaultValues }: ObraFormProps) {
                   id="dataInicio"
                   type="date"
                   value={toDateInputValue(field.value)}
-                  onChange={(e) => field.onChange(new Date(e.target.value))}
+                  onChange={(e) => field.onChange(new Date(`${e.target.value}T00:00:00`))}
                 />
               )}
             />
@@ -191,7 +191,7 @@ export function ObraForm({ clientes, obraId, defaultValues }: ObraFormProps) {
                   id="dataTermino"
                   type="date"
                   value={toDateInputValue(field.value)}
-                  onChange={(e) => field.onChange(new Date(e.target.value))}
+                  onChange={(e) => field.onChange(new Date(`${e.target.value}T00:00:00`))}
                 />
               )}
             />

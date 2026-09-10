@@ -123,7 +123,7 @@ export function GastoModal({ obraId }: { obraId: string }) {
                       ? new Date(field.value as string | number | Date).toISOString().slice(0, 10)
                       : new Date().toISOString().slice(0, 10)
                   }
-                  onChange={(e) => field.onChange(new Date(e.target.value))}
+                  onChange={(e) => field.onChange(new Date(`${e.target.value}T00:00:00`))}
                 />
               )}
             />
